@@ -1,0 +1,11 @@
+{
+  "mobilenetv2": {
+    "params": 2270794,
+    "val_accuracy_last_epoch": 0.9143067598342896,
+    "test_accuracy": 0.9133138258961229
+  },
+  "baseline_cnn": {
+    "params": 94538,
+    "test_accuracy": 0.8536942209217264
+  }
+}

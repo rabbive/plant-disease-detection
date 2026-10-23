@@ -6,15 +6,16 @@ MobileNetV2 transfer learning, a proper train/val/test split, a
 from-scratch baseline comparison, Grad-CAM explainability, and a
 Gradio demo app.
 
-> **Status:** code complete, training run pending. All accuracy
-> numbers will be filled in from an actual run — nothing in this
-> README is a copied result.
+> **Status:** trained. A reference run (CPU, raw PlantVillage tomato
+> images) is committed in `outputs/`, so the demo app works straight
+> after cloning. Every number below comes from that run — nothing in
+> this README is a copied result.
 
 ## Why Tomato, why 10 classes
 
 Full PlantVillage has 54,305 images across 38 classes (14 crops) —
 training all of it takes hours. This project deliberately builds a
-**crop-specific system**: all 10 Tomato classes (~15,000 images),
+**crop-specific system**: all 10 Tomato classes (~18,000 images),
 which trains in about 25–30 minutes on a free Colab GPU and still
 covers the full pipeline end to end.
 
@@ -49,6 +50,26 @@ Training is two-stage:
 Data split is **70% train / 15% validation / 15% test** per class.
 The headline metric is **test accuracy** — images the model never
 saw in training or tuning.
+
+## Results (reference run)
+
+18,160 images → 12,707 train / 2,719 val / 2,734 test.
+
+| Model | Parameters | Test accuracy |
+|-------|-----------:|--------------:|
+| **MobileNetV2 (transfer learning)** | 2,270,794 | **91.33%** |
+| Small CNN from scratch (baseline) | 94,538 | 85.37% |
+
+- Best classes: Yellow Leaf Curl Virus (F1 0.98), Late blight and
+  mosaic virus (0.94). Weakest: Early blight (recall 0.62), mostly
+  confused with other brown-spot diseases.
+- Full per-class report: `outputs/classification_report_test.txt`;
+  figures: `outputs/*.png`; demo walkthrough: `docs/DEMO_SCRIPT.md`.
+- Caveat: PlantVillage has several photos per leaf, and a random
+  image-level split puts ~97% of test images on a leaf that also
+  appears in training, so this accuracy is optimistic.
+
+Sample leaves for the demo (all from the test split) are in `samples/`.
 
 ## Quickstart
 

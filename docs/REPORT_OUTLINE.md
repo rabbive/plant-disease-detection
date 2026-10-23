@@ -32,7 +32,7 @@ convolutional neural network with transfer learning.
    Loss: sparse categorical cross-entropy.
 
 ## 5. Results
-- Final test accuracy (headline): [your %]; validation accuracy: [your %] (from cell 6/7 output).
+- Final test accuracy (headline): [your %]; validation accuracy: [your %] (from notebook step 11 output; validation from steps 8–9).
 - Insert `training_curves.png` — one line explaining both graphs
   (accuracy rises, loss falls, small train/val gap = little overfitting).
 - Insert `confusion_matrix.png` — name the pair your model confused
@@ -40,7 +40,7 @@ convolutional neural network with transfer learning.
 - Insert the classification report table (precision / recall / F1).
 
 ## 6. Sample Predictions
-- 3 leaf photos + the top-3 output from `predict.py` / notebook cell 10.
+- 3 leaf photos + the top-3 output from `predict.py` / notebook step 15.
 - Note the confidence for each correct prediction.
 
 ## 7. Conclusion
