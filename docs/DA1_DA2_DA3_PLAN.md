@@ -15,7 +15,7 @@ so each DA has its own deliverable and nothing is repeated.
 - Aim, real-world importance, literature survey (PlantVillage paper
   + 3–4 related student/research works)
 - Dataset study: PlantVillage — 54,305 images, 38 classes, 14 crops;
-  our scope = 6 Tomato classes and why (focused, trainable)
+  our scope = 10 Tomato classes and why (focused, trainable)
 - Preprocessing demos (great DA-1 material, pure CV syllabus):
   resize to 224×224, pixel scaling, augmentation (flip/rotation/zoom),
   sample images per class, class-count table/graph
@@ -25,11 +25,11 @@ so each DA has its own deliverable and nothing is repeated.
 ## DA-2 — Model building and training (the current setup)
 **Story:** build the classifier and train it.
 - Transfer learning explained: MobileNetV2 pre-trained on ImageNet,
-  base frozen, new head (GAP → Dropout → Dense softmax, 6 outputs)
-- Training: 80/20 split, sparse categorical cross-entropy, Adam,
+  base frozen, new head (GAP → Dropout → Dense softmax, 10 outputs)
+- Training: 70/15/15 train/val/test split, sparse categorical cross-entropy, Adam,
   10 epochs @ 1e-3; accuracy/loss curves
 - First results: validation accuracy, sample predictions
-**Deliverable:** `plant_disease_da2.ipynb` (already built) + interim report
+**Deliverable:** `plant_disease.ipynb` / `train.py` (already built) + interim report
 
 ## DA-3 — Fine-tuning, evaluation, comparison and demo
 **Story:** improve it, prove it, show it.
@@ -42,7 +42,7 @@ so each DA has its own deliverable and nothing is repeated.
 - **Upgrade 2 — Grad-CAM:** heatmap showing which part of the leaf
   the model looked at. Very "computer vision", ~20 lines, strong viva point.
 - **Demo:** Gradio app — upload a leaf photo, get disease + confidence
-  (pattern from the upstream repo's app.py, but with our real 6-class model)
+  (pattern from the upstream repo's app.py, but with our real 10-class model)
 - Limitations: plain-background dataset, tomato only, field photos harder
 **Deliverable:** final report + demo screenshots / live demo
 
@@ -63,9 +63,9 @@ so each DA has its own deliverable and nothing is repeated.
 ## Is it worthy enough for all three? — honest gaps
 - **Common topic:** many students pick plant disease. The comparison
   table + Grad-CAM are what separate this from the crowd.
-- **Subset size:** frame 6 classes as a deliberate crop-specific
-  system. If DA-3 time allows, expanding to 10–15 classes is a
-  one-line change in the notebook (class list) + longer training.
+- **Subset size:** frame the 10 Tomato classes (all of PlantVillage's
+  tomato set) as a deliberate crop-specific system rather than a
+  cut-down version of the 38-class problem.
 - **High accuracy is expected** on this clean dataset — say so in
   the report and discuss it as a limitation instead of hiding it.
   Faculty respect that more than an unexplained 99%.

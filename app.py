@@ -139,7 +139,7 @@ def main():
     model = tf.keras.models.load_model(model_path) if model_path else None
     if model is None:
         print("WARNING: no trained model found - train first "
-              "(plant_disease_da2.ipynb or train.py). App will open in notice mode.")
+              "(plant_disease.ipynb or train.py). App will open in notice mode.")
 
     def predict(img):
         """img: PIL image from Gradio. Returns (top-3 dict, info card markdown)."""
