@@ -37,6 +37,7 @@ import argparse
 import json
 import os
 import random
+import re
 import shutil
 from pathlib import Path
 
@@ -62,6 +63,10 @@ FINETUNE_EPOCHS = 5  # unfreeze step, set 0 to skip
 BASELINE_EPOCHS = 10
 SEED = 123
 SPLIT = (0.70, 0.15, 0.15)  # train / val / test
+# --split leaf: photo series with no leaf ids are grouped in blocks of
+# this many consecutive photo numbers (see leaf_group)
+LEAF_BLOCK = 40
+LEAF_MAP = Path(__file__).resolve().parent / "splits" / "plantvillage_tomato_leaf_map.json"
 
 
 def find_class_dirs(data_root: Path) -> dict:
@@ -89,9 +94,61 @@ def find_class_dirs(data_root: Path) -> dict:
     return found
 
 
-def build_splits(class_dirs: dict, split_root: Path) -> Path:
+def leaf_group(name: str, leaf_map: dict) -> str:
+    """Key shared by all photos of the same physical leaf.
+
+    PlantVillage photographs each leaf several times (4 photos with
+    consecutive numbers in every series the dataset's leaf map covers),
+    so an image-level split puts the same leaf in train and test.
+    1. Use the dataset's own leaf map where it covers the photo
+       (target-spot files are "com.g_tgs_fl N", the map says "com.g_fl N").
+    2. Names with a leaf number ("GH_HL Leaf 166.1") -> that leaf.
+    3. Plain photo counters -> blocks of LEAF_BLOCK consecutive numbers,
+       which keeps ~91% of leaves inside one block (measured on the
+       mapped series).
+    4. Anything else is its own group.
+    """
+    key = name.rsplit(".", 1)[0].split("___", 1)[-1].strip().lower()
+    for k in (key, re.sub(r"\.\d+$", "", key)):
+        k = k.replace("com.g_tgs_fl", "com.g_fl")
+        if k in leaf_map:
+            return "map:" + leaf_map[k][0]
+    m = re.search(r"^(.*?leaf) (\d+)", key)
+    if m:
+        return f"leaf:{m.group(1)}:{m.group(2)}"
+    m = re.match(r"^(.*?)[ ]?(\d+)$", key)
+    if m:
+        return f"block:{m.group(1)}:{int(m.group(2)) // LEAF_BLOCK}"
+    return "single:" + key
+
+
+def split_by_leaf(files: list, rng: random.Random, leaf_map: dict) -> dict:
+    """70/15/15 split of whole leaf groups (by image count).
+
+    Groups vary in size (4-photo leaves vs. blocks of a photo series),
+    so each group, in random order, goes to the split furthest below its
+    target share - this lands close to 70/15/15 even for small classes.
+    """
+    groups = {}
+    for f in files:
+        groups.setdefault(leaf_group(f.name, leaf_map), []).append(f)
+    keys = sorted(groups)
+    rng.shuffle(keys)
+    parts = {"train": [], "val": [], "test": []}
+    targets = dict(zip(parts, SPLIT))
+    for k in keys:
+        size = len(groups[k])
+        filled = sum(len(v) for v in parts.values()) + size
+        name = max(parts, key=lambda s: targets[s] * filled - len(parts[s]))
+        parts[name] += groups[k]
+    return parts
+
+
+def build_splits(class_dirs: dict, split_root: Path, by_leaf=False,
+                 leaf_map=None) -> Path:
     """Copy/link images into split_root/{train,val,test}/<class>/
-    with a per-class seeded 70/15/15 split."""
+    with a per-class seeded 70/15/15 split - of images, or (by_leaf)
+    of whole leaves, so no leaf has photos on both sides."""
     if split_root.exists():
         shutil.rmtree(split_root)
     rng = random.Random(SEED)
@@ -99,13 +156,16 @@ def build_splits(class_dirs: dict, split_root: Path) -> Path:
     for class_name, src in class_dirs.items():
         files = sorted(p for p in src.iterdir()
                        if p.suffix.lower() in {".jpg", ".jpeg", ".png"})
-        rng.shuffle(files)
-        n = len(files)
-        n_train = int(n * SPLIT[0])
-        n_val = int(n * SPLIT[1])
-        parts = {"train": files[:n_train],
-                 "val": files[n_train:n_train + n_val],
-                 "test": files[n_train + n_val:]}
+        if by_leaf:
+            parts = split_by_leaf(files, rng, leaf_map)
+        else:
+            rng.shuffle(files)
+            n = len(files)
+            n_train = int(n * SPLIT[0])
+            n_val = int(n * SPLIT[1])
+            parts = {"train": files[:n_train],
+                     "val": files[n_train:n_train + n_val],
+                     "test": files[n_train + n_val:]}
         counts[class_name] = {k: len(v) for k, v in parts.items()}
         for split_name, split_files in parts.items():
             dst = split_root / split_name / class_name
@@ -243,6 +303,11 @@ def main():
                         help="Also train the from-scratch baseline CNN "
                              "and write a comparison into results_summary.json")
     parser.add_argument("--out", default="outputs")
+    parser.add_argument("--split", choices=["image", "leaf"], default="image",
+                        help="'leaf' keeps all photos of one leaf in the same "
+                             "split (raw PlantVillage file names only)")
+    parser.add_argument("--leaf-map", default=str(LEAF_MAP),
+                        help="PlantVillage leaf map (photo -> leaf id) for --split leaf")
     args = parser.parse_args()
 
     # Imported here so --help works even without TensorFlow installed.
@@ -260,7 +325,12 @@ def main():
     # ---- 1. Prepare the 10-class 70/15/15 splits -----------------------
     print("\n[1/6] Building splits...")
     class_dirs = find_class_dirs(Path(args.data_root))
-    split_root = build_splits(class_dirs, Path("data_split"))
+    leaf_map = (json.loads(Path(args.leaf_map).read_text())
+                if args.split == "leaf" else None)
+    print(f"Split: {args.split}-level")
+    split_root = build_splits(class_dirs, Path("data_split"),
+                              by_leaf=args.split == "leaf", leaf_map=leaf_map)
+    summary["split"] = args.split
 
     # ---- 2. Load datasets ----------------------------------------------
     print("\n[2/6] Loading datasets...")

@@ -91,10 +91,11 @@ Screenshots of the app working are in `outputs/app_demo_*.png` in
 case the live demo fails.
 
 ## 9. Limitations — say these before you're asked
-- **Same-leaf overlap:** PlantVillage has several photos of each leaf.
-  A random image-level split puts ~97% of test images on a leaf that
-  also has a photo in training, so 91% is optimistic. A leaf-grouped
-  split (the dataset authors' recommendation) would be the stricter test.
+- **Same-leaf overlap, and the check:** PlantVillage has ~4 photos of
+  each leaf, so the random image split put ~97% of test images on a
+  leaf that also has a photo in training. Retrained with a leaf-grouped
+  split (no leaf on both sides): 91.96% vs 91.33%, the same within
+  noise. Say this before you're asked: it shows the number holds up.
 - Plain lab backgrounds; real field photos will score lower.
 - Tomato only; class imbalance (373 vs 5,357 images).
 
@@ -106,5 +107,7 @@ case the live demo fails.
   first, then adapt the top layers gently with a 100× smaller lr.
 - *Why test accuracy, not validation?* Validation guided our choices
   (epochs, fine-tuning); test was touched once, at the end.
-- *What would you do next?* Leaf-grouped split, class weights or
-  oversampling for small classes, field photos for testing.
+- *Isn't the test set leaking?* Checked: a leaf-grouped split gives
+  91.96%, the same as 91.33% within noise (`train.py --split leaf`).
+- *What would you do next?* Class weights or oversampling for small
+  classes, field photos for testing, confidence calibration.

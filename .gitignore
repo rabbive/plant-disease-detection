@@ -27,3 +27,9 @@ venv/
 # train.py overwrites these files.
 !outputs/
 !outputs/**
+# ...and the leaf-split run's results (train.py --split leaf), without
+# its model files: the demo uses the model in outputs/.
+!outputs_leaf_split/
+!outputs_leaf_split/**
+outputs_leaf_split/*.keras
+outputs_leaf_split/*.h5

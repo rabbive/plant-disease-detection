@@ -60,14 +60,20 @@ saw in training or tuning.
 | **MobileNetV2 (transfer learning)** | 2,270,794 | **91.33%** |
 | Small CNN from scratch (baseline) | 94,538 | 85.37% |
 
+Leaf-grouped split (`--split leaf`, no leaf on both sides): MobileNetV2
+**91.96%**, baseline 83.73%.
+
 - Best classes: Yellow Leaf Curl Virus (F1 0.98), Late blight and
   mosaic virus (0.94). Weakest: Early blight (recall 0.62), mostly
   confused with other brown-spot diseases.
 - Full per-class report: `outputs/classification_report_test.txt`;
   figures: `outputs/*.png`; demo walkthrough: `docs/DEMO_SCRIPT.md`.
-- Caveat: PlantVillage has several photos per leaf, and a random
-  image-level split puts ~97% of test images on a leaf that also
-  appears in training, so this accuracy is optimistic.
+- Same-leaf check: PlantVillage has ~4 photos per leaf, and the
+  random image-level split puts ~97% of test images on a leaf that
+  also appears in training. Retrained with `--split leaf` (no leaf on
+  both sides): **91.96%** test accuracy, the same within noise, so the
+  overlap was not inflating the result. Results in
+  `outputs_leaf_split/`.
 
 Sample leaves for the demo (all from the test split) are in `samples/`.
 
