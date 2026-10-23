@@ -1,0 +1,23 @@
+# Dataset and splits (downloaded / generated locally, several GB)
+data/
+data_subset/
+data_split/
+*.zip
+
+# Trained models and generated outputs
+outputs/
+*.keras
+*.h5
+class_names.json
+training_curves.png
+confusion_matrix*.png
+classification_report*.txt
+results_summary.json
+gradcam_*.png
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/

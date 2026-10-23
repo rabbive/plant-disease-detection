@@ -1,0 +1,12 @@
+# Plant Disease Detection (Tomato) - MobileNetV2 transfer learning
+# On Google Colab, TensorFlow / numpy / matplotlib are pre-installed;
+# you only need:  pip install seaborn scikit-learn kagglehub gradio
+tensorflow>=2.15
+numpy
+opencv-python
+pillow
+matplotlib
+seaborn
+scikit-learn
+kagglehub
+gradio
