@@ -21,3 +21,9 @@ __pycache__/
 .ipynb_checkpoints/
 .venv/
 venv/
+
+# ...except the committed reference run (CPU, raw PlantVillage) in
+# outputs/, so the demo app works straight after cloning. Re-running
+# train.py overwrites these files.
+!outputs/
+!outputs/**

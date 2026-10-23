@@ -32,10 +32,15 @@ def make_cam(model, img_array):
     dense = next(l for l in model.layers
                  if isinstance(l, tf.keras.layers.Dense))
 
-    extractor = tf.keras.Model(model.input, base.output)
-    features = extractor(img_array, training=False)[0]        # (7, 7, 1280)
+    # Same path as the model at inference (augmentation is off then):
+    # preprocess_input -> MobileNetV2 base. Calling the base directly
+    # avoids tf.keras.Model(model.input, base.output), which Keras 3
+    # rejects for a nested model ("not connected to inputs").
+    x = tf.keras.applications.mobilenet_v2.preprocess_input(
+        tf.convert_to_tensor(img_array, tf.float32))
+    features = base(x, training=False)[0]                      # (7, 7, 1280)
     pooled = tf.reduce_mean(features, axis=(0, 1))             # GAP, (1280,)
-    logits = pooled @ dense.kernel + dense.bias                # (num_classes,)
+    logits = (pooled[tf.newaxis] @ dense.kernel)[0] + dense.bias  # (num_classes,)
     probs = tf.nn.softmax(logits).numpy()
     pred = int(np.argmax(probs))
 
@@ -58,11 +63,13 @@ def main():
     import tensorflow as tf
 
     class_names = json.loads(Path(args.classes).read_text())
-    model = tf.keras.models.load_model(args.model)
+    from train import load_trained_model
+    model = load_trained_model(args.model, len(class_names))
 
     img = tf.keras.utils.load_img(args.image, target_size=IMG_SIZE)
     arr = np.expand_dims(tf.keras.utils.img_to_array(img), axis=0)
-    arr = tf.keras.applications.mobilenet_v2.preprocess_input(arr.copy())
+    # No preprocess_input here: the model applies it internally (train.py
+    # build_mobilenet), so it expects raw 0-255 pixels like the training data.
 
     pred, probs, cam = make_cam(model, arr)
     label = class_names[pred].replace("Tomato___", "Tomato - ").replace("_", " ")

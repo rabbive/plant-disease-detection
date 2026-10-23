@@ -6,7 +6,7 @@ subset of PlantVillage (Tomato only) instead of all 38 classes.
 
 Why a subset?
 - Full PlantVillage = 54,305 images / 38 classes -> hours of training.
-- 10 Tomato classes = ~15,000 images -> trains in ~25-30 min on a
+- 10 Tomato classes = ~18,000 images -> trains in ~25-30 min on a
   free Google Colab GPU, still one clean crop-specific system.
 
 Split: 70% train / 15% validation / 15% test (per class, seeded).
@@ -25,10 +25,11 @@ Dataset"). Only the folders in SELECTED_CLASSES are used.
 
 Outputs (in ./outputs):
     plant_disease_subset.keras  - trained model
+    plant_disease_subset.weights.h5 - same weights, loadable on older Keras
     class_names.json            - label order used by predict.py / app.py
     training_curves.png         - accuracy / loss graph for the report
-    confusion_matrix.png        - confusion matrix (test set)
-    classification_report.txt   - precision / recall / F1 per class (test set)
+    confusion_matrix_test.png   - confusion matrix (test set)
+    classification_report_test.txt - precision / recall / F1 per class (test set)
     results_summary.json        - val + test accuracy, per-model comparison
 """
 
@@ -70,10 +71,14 @@ def find_class_dirs(data_root: Path) -> dict:
       data_root/Tomato___healthy/...                (PlantVillage raw)
       data_root/.../train/Tomato___healthy/...    (Kaggle augmented)
     Prefers a folder under a 'train' directory when both exist.
+    Spaces count as underscores: raw PlantVillage names the spider-mite
+    folder "Tomato___Spider_mites Two-spotted_spider_mite".
     """
+    all_dirs = [p for p in data_root.rglob("*") if p.is_dir()]
     found = {}
     for class_name in SELECTED_CLASSES:
-        candidates = [p for p in data_root.rglob(class_name) if p.is_dir()]
+        candidates = [p for p in all_dirs
+                      if p.name.replace(" ", "_") == class_name]
         if not candidates:
             raise FileNotFoundError(
                 f"Class folder '{class_name}' not found under {data_root}. "
@@ -122,7 +127,20 @@ def load_split(split_root: Path, name: str, shuffle=False):
     return ds
 
 
-def build_mobilenet(num_classes: int):
+def cache_compact(ds):
+    """Cache images in RAM as uint8 instead of float32 (4x smaller).
+
+    ~18k images at 224x224 is ~11 GB as float32 - about all of free Colab's
+    RAM - but under 3 GB as uint8. Batches are cast back to float32
+    (still 0-255) on the way out, so the model sees the same values.
+    """
+    import tensorflow as tf
+    to_uint8 = lambda x, y: (tf.cast(tf.round(x), tf.uint8), y)
+    to_float = lambda x, y: (tf.cast(x, tf.float32), y)
+    return ds.map(to_uint8).cache().map(to_float)
+
+
+def build_mobilenet(num_classes: int, weights="imagenet"):
     import tensorflow as tf
     augmentation = tf.keras.Sequential([
         tf.keras.layers.RandomFlip("horizontal"),
@@ -130,7 +148,7 @@ def build_mobilenet(num_classes: int):
         tf.keras.layers.RandomZoom(0.1),
     ], name="augmentation")
     base = tf.keras.applications.MobileNetV2(
-        input_shape=IMG_SIZE + (3,), include_top=False, weights="imagenet")
+        input_shape=IMG_SIZE + (3,), include_top=False, weights=weights)
     base.trainable = False
     inputs = tf.keras.Input(shape=IMG_SIZE + (3,))
     x = augmentation(inputs)
@@ -141,6 +159,29 @@ def build_mobilenet(num_classes: int):
     outputs = tf.keras.layers.Dense(num_classes, activation="softmax")(x)
     model = tf.keras.Model(inputs, outputs)
     return model, base
+
+
+def load_trained_model(model_path, num_classes: int):
+    """Load the trained model, on any Keras 3 version.
+
+    A .keras file saved by a newer Keras can fail to load on an older
+    one (e.g. Colab or Hugging Face). The weights file saved next to
+    it does load, so on failure rebuild the same architecture (no
+    ImageNet download) and load the weights into it.
+    """
+    import tensorflow as tf
+    model_path = Path(model_path)
+    try:
+        return tf.keras.models.load_model(model_path, compile=False)
+    except Exception as err:
+        weights = model_path.with_name(model_path.stem + ".weights.h5")
+        if not weights.exists():
+            raise
+        print(f"Could not load {model_path.name} with this Keras "
+              f"({type(err).__name__}); rebuilding from {weights.name}")
+        model, _ = build_mobilenet(num_classes, weights=None)
+        model.load_weights(weights)
+        return model
 
 
 def build_baseline(num_classes: int):
@@ -231,9 +272,9 @@ def main():
     (out_dir / "class_names.json").write_text(json.dumps(class_names, indent=2))
 
     autotune = tf.data.AUTOTUNE
-    train_ds = train_ds.cache().shuffle(1000).prefetch(autotune)
-    val_ds = val_ds.cache().prefetch(autotune)
-    test_ds = test_ds.cache().prefetch(autotune)
+    train_ds = cache_compact(train_ds).shuffle(1000).prefetch(autotune)
+    val_ds = cache_compact(val_ds).prefetch(autotune)
+    test_ds = cache_compact(test_ds).prefetch(autotune)
 
     # ---- 3. MobileNetV2 transfer learning (base frozen) -----------------
     print("\n[3/6] Training MobileNetV2 (base frozen)...")
@@ -259,7 +300,9 @@ def main():
         print("\n[4/6] Fine-tuning skipped")
 
     model.save(out_dir / "plant_disease_subset.keras")
-    print(f"Saved model -> {out_dir / 'plant_disease_subset.keras'}")
+    # Weights-only copy: loads on older Keras versions (see load_trained_model)
+    model.save_weights(out_dir / "plant_disease_subset.weights.h5")
+    print(f"Saved model -> {out_dir / 'plant_disease_subset.keras'} (+ .weights.h5)")
     summary["mobilenetv2"] = {
         "params": int(model.count_params()),
         "val_accuracy_last_epoch": float(history.history["val_accuracy"][-1]),

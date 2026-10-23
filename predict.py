@@ -27,12 +27,14 @@ def main():
     import tensorflow as tf
 
     class_names = json.loads(Path(args.classes).read_text())
-    model = tf.keras.models.load_model(args.model)
+    from train import load_trained_model
+    model = load_trained_model(args.model, len(class_names))
 
     img = tf.keras.utils.load_img(args.image, target_size=IMG_SIZE)
     arr = tf.keras.utils.img_to_array(img)
     arr = np.expand_dims(arr, axis=0)
-    arr = tf.keras.applications.mobilenet_v2.preprocess_input(arr)
+    # No preprocess_input here: the model applies it internally (train.py
+    # build_mobilenet), so it expects raw 0-255 pixels like the training data.
 
     probs = model.predict(arr, verbose=0)[0]
     top3 = np.argsort(probs)[::-1][:3]

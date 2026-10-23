@@ -136,10 +136,12 @@ def main():
 
     model_path = _find_model()
     class_names = _load_class_names(model_path)
-    model = tf.keras.models.load_model(model_path) if model_path else None
+    from train import load_trained_model
+    model = (load_trained_model(model_path, len(class_names))
+             if model_path else None)
     if model is None:
         print("WARNING: no trained model found - train first "
-              "(plant_disease_da2.ipynb or train.py). App will open in notice mode.")
+              "(plant_disease.ipynb or train.py). App will open in notice mode.")
 
     def predict(img):
         """img: PIL image from Gradio. Returns (top-3 dict, info card markdown)."""
@@ -147,10 +149,13 @@ def main():
             return {}, ("## No trained model yet\n"
                         "Run the training notebook first, then restart this app. "
                         "It looks for `outputs/plant_disease_subset.keras`.")
-        img = img.resize(IMG_SIZE)
+        if img is None:
+            return {}, "Upload a tomato leaf photo first."
+        img = img.convert("RGB").resize(IMG_SIZE)  # PNGs may be RGBA
         arr = tf.keras.utils.img_to_array(img)
         arr = np.expand_dims(arr, axis=0)
-        arr = tf.keras.applications.mobilenet_v2.preprocess_input(arr)
+        # No preprocess_input here: the model applies it internally (train.py
+        # build_mobilenet), so it expects raw 0-255 pixels like the training data.
         probs = model.predict(arr, verbose=0)[0]
 
         top3 = np.argsort(probs)[::-1][:3]
@@ -173,6 +178,10 @@ def main():
                 f"visually, especially if confidence is below ~70%.*")
         return scores, card
 
+    # One clickable example per class (test-split leaves, see samples/)
+    samples = Path(__file__).resolve().parent / "samples"
+    examples = [[str(p)] for p in sorted(samples.glob("*_1.jpg"))] or None
+
     demo = gr.Interface(
         fn=predict,
         inputs=gr.Image(type="pil", label="Upload a tomato leaf photo"),
@@ -182,6 +191,8 @@ def main():
         description="Upload a single tomato leaf photo. The model "
                     "(MobileNetV2, trained on PlantVillage) predicts the "
                     "disease and shows a short info card.",
+        examples=examples,
+        cache_examples=False,
     )
     demo.launch()  # in Colab, add share=True for a public link
 

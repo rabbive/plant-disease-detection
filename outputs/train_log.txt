@@ -1,0 +1,140 @@
+TensorFlow 2.21.0 | GPUs: []
+[1/6] Building splits...
+  Tomato___healthy: {'train': 1113, 'val': 238, 'test': 240}
+  Tomato___Bacterial_spot: {'train': 1488, 'val': 319, 'test': 320}
+  Tomato___Early_blight: {'train': 700, 'val': 150, 'test': 150}
+  Tomato___Late_blight: {'train': 1336, 'val': 286, 'test': 287}
+  Tomato___Leaf_Mold: {'train': 666, 'val': 142, 'test': 144}
+  Tomato___Septoria_leaf_spot: {'train': 1239, 'val': 265, 'test': 267}
+  Tomato___Spider_mites_Two-spotted_spider_mite: {'train': 1173, 'val': 251, 'test': 252}
+  Tomato___Target_Spot: {'train': 982, 'val': 210, 'test': 212}
+  Tomato___Tomato_mosaic_virus: {'train': 261, 'val': 55, 'test': 57}
+  Tomato___Tomato_Yellow_Leaf_Curl_Virus: {'train': 3749, 'val': 803, 'test': 805}
+[2/6] Loading datasets...
+Found 12707 files belonging to 10 classes.
+Found 2719 files belonging to 10 classes.
+Found 2734 files belonging to 10 classes.
+Classes: ['Tomato___Bacterial_spot', 'Tomato___Early_blight', 'Tomato___Late_blight', 'Tomato___Leaf_Mold', 'Tomato___Septoria_leaf_spot', 'Tomato___Spider_mites_Two-spotted_spider_mite', 'Tomato___Target_Spot', 'Tomato___Tomato_Yellow_Leaf_Curl_Virus', 'Tomato___Tomato_mosaic_virus', 'Tomato___healthy']
+[3/6] Training MobileNetV2 (base frozen)...
+Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/mobilenet_v2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_1.0_224_no_top.h5
+      0/9406464 ━━━━━━━━━━━━━━━━━━━━ 0s 0s/step
+ 516096/9406464 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
+7077888/9406464 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
+9406464/9406464 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
+Model: "functional_1"
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃ Layer (type)                    ┃ Output Shape           ┃       Param # ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ input_layer_1 (InputLayer)      │ (None, 224, 224, 3)    │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ augmentation (Sequential)       │ (None, 224, 224, 3)    │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ true_divide (TrueDivide)        │ (None, 224, 224, 3)    │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ subtract (Subtract)             │ (None, 224, 224, 3)    │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ mobilenetv2_1.00_224            │ (None, 7, 7, 1280)     │     2,257,984 │
+│ (Functional)                    │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ global_average_pooling2d        │ (None, 1280)           │             0 │
+│ (GlobalAveragePooling2D)        │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dropout (Dropout)               │ (None, 1280)           │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dense (Dense)                   │ (None, 10)             │        12,810 │
+└─────────────────────────────────┴────────────────────────┴───────────────┘
+ Total params: 2,270,794 (8.66 MB)
+ Trainable params: 12,810 (50.04 KB)
+ Non-trainable params: 2,257,984 (8.61 MB)
+/home/user/venv/lib/python3.13/site-packages/keras/src/trainers/epoch_iterator.py:74: UserWarning: `shuffle=True` was passed, but will be ignored since the data `x` was provided as a tf.data.Dataset. The Dataset is expected to already be shuffled (via `.shuffle(buffer_size)`).
+  self.data_adapter = data_adapters.get_data_adapter(
+Epoch 1/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 221s 480ms/step - accuracy: 0.7395 - loss: 0.8048 - val_accuracy: 0.8470 - val_loss: 0.4880
+Epoch 2/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 173s 431ms/step - accuracy: 0.8444 - loss: 0.4667 - val_accuracy: 0.8720 - val_loss: 0.3961
+Epoch 3/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 170s 425ms/step - accuracy: 0.8724 - loss: 0.3904 - val_accuracy: 0.8830 - val_loss: 0.3617
+Epoch 4/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 163s 407ms/step - accuracy: 0.8773 - loss: 0.3636 - val_accuracy: 0.8841 - val_loss: 0.3432
+Epoch 5/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 160s 400ms/step - accuracy: 0.8868 - loss: 0.3422 - val_accuracy: 0.9000 - val_loss: 0.3145
+Epoch 6/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 169s 424ms/step - accuracy: 0.8912 - loss: 0.3307 - val_accuracy: 0.8930 - val_loss: 0.3302
+Epoch 7/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 167s 418ms/step - accuracy: 0.8905 - loss: 0.3185 - val_accuracy: 0.8889 - val_loss: 0.3137
+Epoch 8/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 170s 427ms/step - accuracy: 0.8965 - loss: 0.3056 - val_accuracy: 0.8978 - val_loss: 0.3034
+Epoch 9/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 194s 486ms/step - accuracy: 0.8999 - loss: 0.2935 - val_accuracy: 0.9047 - val_loss: 0.2984
+Epoch 10/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 168s 422ms/step - accuracy: 0.8992 - loss: 0.2894 - val_accuracy: 0.8974 - val_loss: 0.3098
+[4/6] Fine-tuning top layers...
+Epoch 1/5
+398/398 ━━━━━━━━━━━━━━━━━━━━ 220s 534ms/step - accuracy: 0.7510 - loss: 1.0328 - val_accuracy: 0.9099 - val_loss: 0.2695
+Epoch 2/5
+398/398 ━━━━━━━━━━━━━━━━━━━━ 274s 565ms/step - accuracy: 0.8643 - loss: 0.4047 - val_accuracy: 0.9169 - val_loss: 0.2565
+Epoch 3/5
+398/398 ━━━━━━━━━━━━━━━━━━━━ 226s 566ms/step - accuracy: 0.8898 - loss: 0.3276 - val_accuracy: 0.9161 - val_loss: 0.2559
+Epoch 4/5
+398/398 ━━━━━━━━━━━━━━━━━━━━ 214s 537ms/step - accuracy: 0.9008 - loss: 0.2848 - val_accuracy: 0.9206 - val_loss: 0.2607
+Epoch 5/5
+398/398 ━━━━━━━━━━━━━━━━━━━━ 212s 532ms/step - accuracy: 0.9146 - loss: 0.2516 - val_accuracy: 0.9143 - val_loss: 0.2678
+Saved model -> outputs/plant_disease_subset.keras
+[5/6] Evaluating on the test set (never seen in training)...
+                                               precision    recall  f1-score   support
+                      Tomato___Bacterial_spot       0.90      0.93      0.92       320
+                        Tomato___Early_blight       0.96      0.62      0.75       150
+                         Tomato___Late_blight       0.96      0.92      0.94       287
+                           Tomato___Leaf_Mold       0.89      0.94      0.92       144
+                  Tomato___Septoria_leaf_spot       0.90      0.90      0.90       267
+Tomato___Spider_mites_Two-spotted_spider_mite       0.86      0.87      0.86       252
+                         Tomato___Target_Spot       0.79      0.84      0.82       212
+       Tomato___Tomato_Yellow_Leaf_Curl_Virus       0.99      0.97      0.98       805
+                 Tomato___Tomato_mosaic_virus       0.98      0.89      0.94        57
+                             Tomato___healthy       0.81      1.00      0.90       240
+                                     accuracy                           0.91      2734
+                                    macro avg       0.90      0.89      0.89      2734
+                                 weighted avg       0.92      0.91      0.91      2734
+MobileNetV2 test accuracy: 91.33%
+[6/6] Training baseline CNN from scratch...
+/home/user/venv/lib/python3.13/site-packages/keras/src/layers/preprocessing/data_layer.py:95: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.
+  super().__init__(**kwargs)
+/home/user/venv/lib/python3.13/site-packages/keras/src/trainers/epoch_iterator.py:74: UserWarning: `shuffle=True` was passed, but will be ignored since the data `x` was provided as a tf.data.Dataset. The Dataset is expected to already be shuffled (via `.shuffle(buffer_size)`).
+  self.data_adapter = data_adapters.get_data_adapter(
+Epoch 1/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 179s 445ms/step - accuracy: 0.4073 - loss: 1.7152 - val_accuracy: 0.5719 - val_loss: 1.3096
+Epoch 2/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 169s 422ms/step - accuracy: 0.5964 - loss: 1.1634 - val_accuracy: 0.6708 - val_loss: 0.9850
+Epoch 3/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 157s 393ms/step - accuracy: 0.6813 - loss: 0.9424 - val_accuracy: 0.6848 - val_loss: 0.8974
+Epoch 4/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 150s 377ms/step - accuracy: 0.7187 - loss: 0.8263 - val_accuracy: 0.7837 - val_loss: 0.6648
+Epoch 5/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 175s 440ms/step - accuracy: 0.7403 - loss: 0.7558 - val_accuracy: 0.8018 - val_loss: 0.5871
+Epoch 6/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 168s 422ms/step - accuracy: 0.7656 - loss: 0.6827 - val_accuracy: 0.7834 - val_loss: 0.6253
+Epoch 7/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 164s 410ms/step - accuracy: 0.7880 - loss: 0.6161 - val_accuracy: 0.8058 - val_loss: 0.5893
+Epoch 8/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 156s 392ms/step - accuracy: 0.8037 - loss: 0.5720 - val_accuracy: 0.8588 - val_loss: 0.4334
+Epoch 9/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 160s 400ms/step - accuracy: 0.8093 - loss: 0.5576 - val_accuracy: 0.8544 - val_loss: 0.4391
+Epoch 10/10
+398/398 ━━━━━━━━━━━━━━━━━━━━ 159s 399ms/step - accuracy: 0.8203 - loss: 0.5130 - val_accuracy: 0.8716 - val_loss: 0.4040
+                                               precision    recall  f1-score   support
+                      Tomato___Bacterial_spot       0.84      0.89      0.87       320
+                        Tomato___Early_blight       0.76      0.32      0.45       150
+                         Tomato___Late_blight       0.74      0.83      0.78       287
+                           Tomato___Leaf_Mold       0.83      0.83      0.83       144
+                  Tomato___Septoria_leaf_spot       0.88      0.78      0.83       267
+Tomato___Spider_mites_Two-spotted_spider_mite       0.72      0.89      0.79       252
+                         Tomato___Target_Spot       0.78      0.79      0.78       212
+       Tomato___Tomato_Yellow_Leaf_Curl_Virus       0.93      0.95      0.94       805
+                 Tomato___Tomato_mosaic_virus       0.94      0.77      0.85        57
+                             Tomato___healthy       0.99      0.98      0.98       240
+                                     accuracy                           0.85      2734
+                                    macro avg       0.84      0.80      0.81      2734
+                                 weighted avg       0.86      0.85      0.85      2734
+Baseline CNN test accuracy: 85.37%
+Transfer learning gain: +5.96 points
+Done. Outputs in outputs/ - see results_summary.json

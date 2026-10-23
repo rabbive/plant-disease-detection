@@ -1,7 +1,8 @@
 # Plant Disease Detection (Tomato) - MobileNetV2 transfer learning
 # On Google Colab, TensorFlow / numpy / matplotlib are pre-installed;
 # you only need:  pip install seaborn scikit-learn kagglehub gradio
-tensorflow>=2.15
+tensorflow>=2.16  # Keras 3; the committed model needs it
+keras>=3.5         # oldest version verified to load outputs/ (via the .weights.h5 fallback)
 numpy
 opencv-python
 pillow
