@@ -6,7 +6,7 @@ subset of PlantVillage (Tomato only) instead of all 38 classes.
 
 Why a subset?
 - Full PlantVillage = 54,305 images / 38 classes -> hours of training.
-- 10 Tomato classes = ~15,000 images -> trains in ~25-30 min on a
+- 10 Tomato classes = ~18,000 images -> trains in ~25-30 min on a
   free Google Colab GPU, still one clean crop-specific system.
 
 Split: 70% train / 15% validation / 15% test (per class, seeded).
@@ -27,8 +27,8 @@ Outputs (in ./outputs):
     plant_disease_subset.keras  - trained model
     class_names.json            - label order used by predict.py / app.py
     training_curves.png         - accuracy / loss graph for the report
-    confusion_matrix.png        - confusion matrix (test set)
-    classification_report.txt   - precision / recall / F1 per class (test set)
+    confusion_matrix_test.png   - confusion matrix (test set)
+    classification_report_test.txt - precision / recall / F1 per class (test set)
     results_summary.json        - val + test accuracy, per-model comparison
 """
 
@@ -70,10 +70,14 @@ def find_class_dirs(data_root: Path) -> dict:
       data_root/Tomato___healthy/...                (PlantVillage raw)
       data_root/.../train/Tomato___healthy/...    (Kaggle augmented)
     Prefers a folder under a 'train' directory when both exist.
+    Spaces count as underscores: raw PlantVillage names the spider-mite
+    folder "Tomato___Spider_mites Two-spotted_spider_mite".
     """
+    all_dirs = [p for p in data_root.rglob("*") if p.is_dir()]
     found = {}
     for class_name in SELECTED_CLASSES:
-        candidates = [p for p in data_root.rglob(class_name) if p.is_dir()]
+        candidates = [p for p in all_dirs
+                      if p.name.replace(" ", "_") == class_name]
         if not candidates:
             raise FileNotFoundError(
                 f"Class folder '{class_name}' not found under {data_root}. "
@@ -120,6 +124,19 @@ def load_split(split_root: Path, name: str, shuffle=False):
         split_root / name, image_size=IMG_SIZE, batch_size=BATCH_SIZE,
         shuffle=shuffle, seed=SEED)
     return ds
+
+
+def cache_compact(ds):
+    """Cache images in RAM as uint8 instead of float32 (4x smaller).
+
+    ~18k images at 224x224 is ~11 GB as float32 - about all of free Colab's
+    RAM - but under 3 GB as uint8. Batches are cast back to float32
+    (still 0-255) on the way out, so the model sees the same values.
+    """
+    import tensorflow as tf
+    to_uint8 = lambda x, y: (tf.cast(tf.round(x), tf.uint8), y)
+    to_float = lambda x, y: (tf.cast(x, tf.float32), y)
+    return ds.map(to_uint8).cache().map(to_float)
 
 
 def build_mobilenet(num_classes: int):
@@ -231,9 +248,9 @@ def main():
     (out_dir / "class_names.json").write_text(json.dumps(class_names, indent=2))
 
     autotune = tf.data.AUTOTUNE
-    train_ds = train_ds.cache().shuffle(1000).prefetch(autotune)
-    val_ds = val_ds.cache().prefetch(autotune)
-    test_ds = test_ds.cache().prefetch(autotune)
+    train_ds = cache_compact(train_ds).shuffle(1000).prefetch(autotune)
+    val_ds = cache_compact(val_ds).prefetch(autotune)
+    test_ds = cache_compact(test_ds).prefetch(autotune)
 
     # ---- 3. MobileNetV2 transfer learning (base frozen) -----------------
     print("\n[3/6] Training MobileNetV2 (base frozen)...")

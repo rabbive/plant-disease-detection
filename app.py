@@ -147,10 +147,13 @@ def main():
             return {}, ("## No trained model yet\n"
                         "Run the training notebook first, then restart this app. "
                         "It looks for `outputs/plant_disease_subset.keras`.")
-        img = img.resize(IMG_SIZE)
+        if img is None:
+            return {}, "Upload a tomato leaf photo first."
+        img = img.convert("RGB").resize(IMG_SIZE)  # PNGs may be RGBA
         arr = tf.keras.utils.img_to_array(img)
         arr = np.expand_dims(arr, axis=0)
-        arr = tf.keras.applications.mobilenet_v2.preprocess_input(arr)
+        # No preprocess_input here: the model applies it internally (train.py
+        # build_mobilenet), so it expects raw 0-255 pixels like the training data.
         probs = model.predict(arr, verbose=0)[0]
 
         top3 = np.argsort(probs)[::-1][:3]
