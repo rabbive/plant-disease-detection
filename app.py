@@ -136,7 +136,9 @@ def main():
 
     model_path = _find_model()
     class_names = _load_class_names(model_path)
-    model = tf.keras.models.load_model(model_path) if model_path else None
+    from train import load_trained_model
+    model = (load_trained_model(model_path, len(class_names))
+             if model_path else None)
     if model is None:
         print("WARNING: no trained model found - train first "
               "(plant_disease.ipynb or train.py). App will open in notice mode.")
@@ -176,6 +178,10 @@ def main():
                 f"visually, especially if confidence is below ~70%.*")
         return scores, card
 
+    # One clickable example per class (test-split leaves, see samples/)
+    samples = Path(__file__).resolve().parent / "samples"
+    examples = [[str(p)] for p in sorted(samples.glob("*_1.jpg"))] or None
+
     demo = gr.Interface(
         fn=predict,
         inputs=gr.Image(type="pil", label="Upload a tomato leaf photo"),
@@ -185,6 +191,8 @@ def main():
         description="Upload a single tomato leaf photo. The model "
                     "(MobileNetV2, trained on PlantVillage) predicts the "
                     "disease and shows a short info card.",
+        examples=examples,
+        cache_examples=False,
     )
     demo.launch()  # in Colab, add share=True for a public link
 

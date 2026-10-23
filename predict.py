@@ -27,7 +27,8 @@ def main():
     import tensorflow as tf
 
     class_names = json.loads(Path(args.classes).read_text())
-    model = tf.keras.models.load_model(args.model)
+    from train import load_trained_model
+    model = load_trained_model(args.model, len(class_names))
 
     img = tf.keras.utils.load_img(args.image, target_size=IMG_SIZE)
     arr = tf.keras.utils.img_to_array(img)

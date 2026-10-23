@@ -25,6 +25,7 @@ Dataset"). Only the folders in SELECTED_CLASSES are used.
 
 Outputs (in ./outputs):
     plant_disease_subset.keras  - trained model
+    plant_disease_subset.weights.h5 - same weights, loadable on older Keras
     class_names.json            - label order used by predict.py / app.py
     training_curves.png         - accuracy / loss graph for the report
     confusion_matrix_test.png   - confusion matrix (test set)
@@ -139,7 +140,7 @@ def cache_compact(ds):
     return ds.map(to_uint8).cache().map(to_float)
 
 
-def build_mobilenet(num_classes: int):
+def build_mobilenet(num_classes: int, weights="imagenet"):
     import tensorflow as tf
     augmentation = tf.keras.Sequential([
         tf.keras.layers.RandomFlip("horizontal"),
@@ -147,7 +148,7 @@ def build_mobilenet(num_classes: int):
         tf.keras.layers.RandomZoom(0.1),
     ], name="augmentation")
     base = tf.keras.applications.MobileNetV2(
-        input_shape=IMG_SIZE + (3,), include_top=False, weights="imagenet")
+        input_shape=IMG_SIZE + (3,), include_top=False, weights=weights)
     base.trainable = False
     inputs = tf.keras.Input(shape=IMG_SIZE + (3,))
     x = augmentation(inputs)
@@ -158,6 +159,29 @@ def build_mobilenet(num_classes: int):
     outputs = tf.keras.layers.Dense(num_classes, activation="softmax")(x)
     model = tf.keras.Model(inputs, outputs)
     return model, base
+
+
+def load_trained_model(model_path, num_classes: int):
+    """Load the trained model, on any Keras 3 version.
+
+    A .keras file saved by a newer Keras can fail to load on an older
+    one (e.g. Colab or Hugging Face). The weights file saved next to
+    it does load, so on failure rebuild the same architecture (no
+    ImageNet download) and load the weights into it.
+    """
+    import tensorflow as tf
+    model_path = Path(model_path)
+    try:
+        return tf.keras.models.load_model(model_path, compile=False)
+    except Exception as err:
+        weights = model_path.with_name(model_path.stem + ".weights.h5")
+        if not weights.exists():
+            raise
+        print(f"Could not load {model_path.name} with this Keras "
+              f"({type(err).__name__}); rebuilding from {weights.name}")
+        model, _ = build_mobilenet(num_classes, weights=None)
+        model.load_weights(weights)
+        return model
 
 
 def build_baseline(num_classes: int):
@@ -276,7 +300,9 @@ def main():
         print("\n[4/6] Fine-tuning skipped")
 
     model.save(out_dir / "plant_disease_subset.keras")
-    print(f"Saved model -> {out_dir / 'plant_disease_subset.keras'}")
+    # Weights-only copy: loads on older Keras versions (see load_trained_model)
+    model.save_weights(out_dir / "plant_disease_subset.weights.h5")
+    print(f"Saved model -> {out_dir / 'plant_disease_subset.keras'} (+ .weights.h5)")
     summary["mobilenetv2"] = {
         "params": int(model.count_params()),
         "val_accuracy_last_epoch": float(history.history["val_accuracy"][-1]),

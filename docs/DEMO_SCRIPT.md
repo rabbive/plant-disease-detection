@@ -6,10 +6,17 @@ seed 123). If you re-train, re-read `outputs/results_summary.json` and
 `outputs/classification_report_test.txt` and update the numbers.
 
 ## Before the professor arrives
-1. `pip install -r requirements.txt`, then `python app.py` and open
-   http://127.0.0.1:7860 — the trained model is already in `outputs/`,
-   no training needed. (Colab: `%run app.py` gives a public link.)
-2. Do one test upload so the model is warm (first prediction is slow).
+1. Pick where the app runs (the trained model is already in `outputs/`,
+   no training needed for any of these):
+   - **Best:** your Hugging Face Space link (see README → "Put it
+     online") — works on the projector and on the professor's phone.
+   - **Laptop:** `pip install -r requirements.txt`, `python app.py`,
+     open http://127.0.0.1:7860.
+   - **Colab:** open `plant_disease_results.ipynb` (README badge), run
+     all; the last cell prints a public link. The same notebook walks
+     through every chart below — a good backup if anything fails.
+2. Do one test click on an example leaf so the model is warm (first
+   prediction is slow; a sleeping Space takes ~1 minute to wake up).
 3. Have these open in tabs: `outputs/class_distribution.png`,
    `outputs/training_curves.png`, `outputs/confusion_matrix_test.png`,
    `outputs/gradcam_grid.png`, `outputs/gradcam_wrong.png`.

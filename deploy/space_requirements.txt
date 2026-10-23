@@ -1,0 +1,5 @@
+# Hugging Face Space (free CPU). Gradio itself comes from sdk_version
+# in the Space README; this is everything else app.py needs.
+tensorflow-cpu==2.21.0
+numpy
+pillow
