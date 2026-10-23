@@ -109,28 +109,35 @@ python app.py                                                # Gradio demo
 `app.py` is the showpiece: upload a leaf photo and get the top-3
 predictions plus an **info card** for the top disease — cause,
 symptoms to check, and prevention/next steps for all 10 classes.
-Runs locally (`python app.py` → http://127.0.0.1:7860), in Colab
-(`%run app.py` prints a public share link), or as a free public
-website on Hugging Face Spaces (below). It already includes the
-trained model, and one example leaf per class is clickable under the
-upload box.
+Runs locally (`python app.py` → http://127.0.0.1:7860) or in Colab
+(`%run app.py` prints a public share link). One example leaf per
+class is clickable under the upload box.
 
-### Put it online — Hugging Face Spaces (free, run on your computer)
+**Live demo:** https://huggingface.co/spaces/ashwaanthh/tomato-leaf-doctor
+
+### Put it online — Hugging Face Spaces (free)
+Hugging Face only runs Gradio apps for PRO accounts, so the free
+Space is a static page (`deploy/static/index.html`) that runs the same
+model in the visitor's browser with ONNX Runtime Web. Same top-3
+predictions and info cards; photos never leave the device.
+
 1. Create a free account at https://huggingface.co/join
 2. Create a token with **Write** access:
    https://huggingface.co/settings/tokens → *New token* → *Write*
 3. In this repo folder:
    ```bash
-   git pull                      # make sure outputs/ and samples/ are present
    pip install huggingface_hub
-   python deploy/deploy_to_hf.py --space YOUR_HF_USERNAME/tomato-leaf-doctor
+   python deploy/deploy_to_hf.py --space YOUR_HF_USERNAME/tomato-leaf-doctor --static
    ```
-   Paste the token when asked. The script uploads only what the app
-   needs (~20 MB: `app.py`, `train.py`, the model, sample leaves) and
-   prints the link, e.g. `https://huggingface.co/spaces/YOUR_HF_USERNAME/tomato-leaf-doctor`.
-4. The first build takes ~5 minutes (watch the *Logs* tab). After that
-   the link works for anyone, on phone or laptop. Run step 3 again to
-   push updates. Add `--dry-run` to see the file list without uploading.
+   Paste the token when asked. It uploads ~9 MB (the page, the ONNX
+   model, one sample leaf per class) and prints the link. Static Spaces
+   go live in seconds; run it again to push updates. Add `--dry-run`
+   to see the file list without uploading.
+
+After retraining, regenerate the browser model first (`pip install
+tf2onnx onnx onnxruntime`, then `python deploy/export_onnx.py`). It
+checks the ONNX model against Keras on every sample leaf. With a PRO
+account, drop `--static` to deploy the Gradio app instead.
 
 If the model file fails to load on a different Keras version, the app
 rebuilds the network and loads `plant_disease_subset.weights.h5`

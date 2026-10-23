@@ -8,12 +8,16 @@ One-time setup:
     3. pip install huggingface_hub
 
 Deploy (from the repo folder):
-    python deploy/deploy_to_hf.py --space YOUR_HF_USERNAME/tomato-leaf-doctor
+    python deploy/deploy_to_hf.py --space YOUR_HF_USERNAME/tomato-leaf-doctor --static
+
+--static publishes deploy/static/ (the model runs in the visitor's
+browser via ONNX) and is free. Without it, the Gradio app is deployed,
+which Hugging Face only runs for PRO accounts.
 
 The script asks for the token (or set HF_TOKEN, or run `hf auth login`
-once), uploads only the files the app needs (~20 MB), and prints the
-Space URL. The first build takes ~5 minutes; after that the link works
-for anyone, on any device. Run it again to push updates.
+once), uploads only the files the app needs (~9 MB static, ~20 MB Gradio)
+and prints the Space URL. A static Space is live in seconds, a Gradio
+one builds for ~5 minutes; after that the link works for anyone. Run it again to push updates.
 
 Check what would be uploaded without uploading anything:
     python deploy/deploy_to_hf.py --space YOUR_HF_USERNAME/tomato-leaf-doctor --dry-run
@@ -38,6 +42,21 @@ FILES = {
     "outputs/plant_disease_subset.weights.h5": "outputs/plant_disease_subset.weights.h5",
     "outputs/class_names.json": "outputs/class_names.json",
 }
+
+
+def stage_static(dst: Path) -> list:
+    """Static Space: deploy/static/ (page, ONNX model) + one sample per class."""
+    staged = []
+    for src in sorted((REPO / "deploy/static").iterdir()):
+        shutil.copy2(src, dst / src.name)
+        staged.append(src.name)
+    if "model.onnx" not in staged:
+        raise SystemExit("Missing deploy/static/model.onnx - run deploy/export_onnx.py first.")
+    (dst / "samples").mkdir()
+    for img in sorted((REPO / "samples").glob("*_1.jpg")):
+        shutil.copy2(img, dst / "samples" / img.name)
+        staged.append(f"samples/{img.name}")
+    return staged
 
 
 def stage(dst: Path) -> list:
@@ -78,6 +97,9 @@ def main():
     parser.add_argument("--token", help="HF write token (default: HF_TOKEN or saved login)")
     parser.add_argument("--private", action="store_true",
                         help="Make the Space private (only you can open it)")
+    parser.add_argument("--static", action="store_true",
+                        help="Free static Space: the model runs in the browser "
+                             "(Gradio Spaces need Hugging Face PRO)")
     parser.add_argument("--dry-run", action="store_true",
                         help="Only list the files that would be uploaded")
     args = parser.parse_args()
@@ -85,7 +107,7 @@ def main():
         raise SystemExit("--space must look like USERNAME/space-name")
 
     with tempfile.TemporaryDirectory() as tmp:
-        staged = stage(Path(tmp))
+        staged = (stage_static if args.static else stage)(Path(tmp))
         size = sum(f.stat().st_size for f in Path(tmp).rglob("*") if f.is_file())
         print(f"{len(staged)} files, {size / 1e6:.1f} MB:")
         for p in staged:
@@ -98,12 +120,17 @@ def main():
         api = HfApi(token=get_token(args.token))
         user = api.whoami()["name"]
         print(f"\nLogged in as {user}")
-        api.create_repo(args.space, repo_type="space", space_sdk="gradio",
+        api.create_repo(args.space, repo_type="space",
+                        space_sdk="static" if args.static else "gradio",
                         private=args.private, exist_ok=True)
         api.upload_folder(repo_id=args.space, repo_type="space", folder_path=tmp,
+                          delete_patterns="*",  # Space mirrors this deploy exactly
                           commit_message="Deploy tomato leaf disease demo")
 
     url = f"https://huggingface.co/spaces/{args.space}"
+    if args.static:
+        print(f"\nUploaded. The Space is live:\n  {url}")
+        return
     print(f"\nUploaded. The Space is building (about 5 minutes the first time):\n  {url}")
     print("Watch progress in the 'Logs' tab there; when it says Running, the app is live.")
 

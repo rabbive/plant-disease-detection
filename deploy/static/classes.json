@@ -1,0 +1,72 @@
+[
+ {
+  "label": "Tomato___Bacterial_spot",
+  "name": "Bacterial Spot",
+  "cause": "Bacteria (Xanthomonas species), spread by splashing water and infected seed.",
+  "symptoms": "Small dark water-soaked spots on leaves and fruit, turning brown/black.",
+  "prevention": "Avoid overhead watering, rotate crops, remove infected leaves, copper-based sprays are commonly used."
+ },
+ {
+  "label": "Tomato___Early_blight",
+  "name": "Early Blight",
+  "cause": "Fungus Alternaria solani, common in warm, humid weather.",
+  "symptoms": "Brown spots with concentric 'target' rings, usually on older lower leaves first, with yellowing around the spot.",
+  "prevention": "Mulch to stop soil splash, space plants for airflow, remove infected lower leaves, fungicide if it spreads."
+ },
+ {
+  "label": "Tomato___Late_blight",
+  "name": "Late Blight",
+  "cause": "Oomycete Phytophthora infestans (the Irish potato famine organism), spreads very fast in cool wet weather.",
+  "symptoms": "Large water-soaked pale-green to brown patches, white mould under the leaf, whole plant can collapse in days.",
+  "prevention": "Act fast: remove and destroy infected plants (do not compost), improve airflow, preventive fungicide in wet spells."
+ },
+ {
+  "label": "Tomato___Leaf_Mold",
+  "name": "Leaf Mold",
+  "cause": "Fungus Passalora fulva, thrives in high humidity, common in greenhouses.",
+  "symptoms": "Pale yellow spots on top of the leaf, olive-green velvety mould on the underside.",
+  "prevention": "Ventilate / reduce humidity, space plants, water at the base, remove affected leaves."
+ },
+ {
+  "label": "Tomato___Septoria_leaf_spot",
+  "name": "Septoria Leaf Spot",
+  "cause": "Fungus Septoria lycopersici, spread by rain and water splash from soil.",
+  "symptoms": "Many small round spots with grey centres and dark borders, mostly on lower leaves; leaves yellow and drop.",
+  "prevention": "Mulch, avoid wetting leaves, remove infected foliage, rotate crops, fungicide if severe."
+ },
+ {
+  "label": "Tomato___Spider_mites_Two-spotted_spider_mite",
+  "name": "Spider Mites (Two-spotted)",
+  "cause": "Pest mite Tetranychus urticae, worst in hot dry weather - not a fungus or bacteria.",
+  "symptoms": "Tiny yellow/white stippling on leaves, fine webbing under leaves, leaves bronze and dry out.",
+  "prevention": "Spray undersides with water, encourage predatory mites, neem or miticide if the infestation is heavy."
+ },
+ {
+  "label": "Tomato___Target_Spot",
+  "name": "Target Spot",
+  "cause": "Fungus Corynespora cassiicola, favours warm humid conditions.",
+  "symptoms": "Brown spots with concentric rings and a light centre, on leaves, stems and fruit.",
+  "prevention": "Improve airflow, avoid leaf wetness, remove infected material, fungicide if it spreads."
+ },
+ {
+  "label": "Tomato___Tomato_Yellow_Leaf_Curl_Virus",
+  "name": "Tomato Yellow Leaf Curl Virus",
+  "cause": "Virus (TYLCV), carried by whiteflies. No cure once infected.",
+  "symptoms": "Leaves curl upwards, turn yellow at the edges, plant is stunted with a bushy look, heavy flower drop.",
+  "prevention": "Control whiteflies (nets, traps, sprays), remove infected plants, use resistant varieties."
+ },
+ {
+  "label": "Tomato___Tomato_mosaic_virus",
+  "name": "Tomato Mosaic Virus",
+  "cause": "Virus (ToMV), spread by hands, tools, and infected seed. No cure once infected.",
+  "symptoms": "Mottled light/dark green mosaic pattern, leaves curl and distort, plant growth is stunted.",
+  "prevention": "Remove and destroy infected plants, disinfect tools and wash hands before handling plants, use resistant varieties."
+ },
+ {
+  "label": "Tomato___healthy",
+  "name": "Healthy",
+  "cause": "No disease detected.",
+  "symptoms": "Leaf looks normal - even green colour, no spots or curling.",
+  "prevention": "Keep doing what works: spaced plants, watering at the base, regular inspection."
+ }
+]
