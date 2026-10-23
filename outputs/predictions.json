@@ -6,17 +6,19 @@
       "top3": [
         [
           "Tomato___Bacterial_spot",
-          0.6387
+          0.6748
         ],
         [
           "Tomato___Septoria_leaf_spot",
-          0.3382
+          0.2756
         ],
         [
           "Tomato___Tomato_Yellow_Leaf_Curl_Virus",
-          0.0108
+          0.0303
         ]
-      ]
+      ],
+      "app_shows": "Tomato___Bacterial_spot",
+      "app_status": "ok"
     },
     {
       "file": "samples/bacterial_spot_2.jpg",
@@ -24,17 +26,19 @@
       "top3": [
         [
           "Tomato___Bacterial_spot",
-          0.991
-        ],
-        [
-          "Tomato___Septoria_leaf_spot",
-          0.0076
+          0.9943
         ],
         [
           "Tomato___Target_Spot",
-          0.0013
+          0.004
+        ],
+        [
+          "Tomato___Septoria_leaf_spot",
+          0.0017
         ]
-      ]
+      ],
+      "app_shows": "Tomato___Bacterial_spot",
+      "app_status": "ok"
     },
     {
       "file": "samples/early_blight_1.jpg",
@@ -42,17 +46,19 @@
       "top3": [
         [
           "Tomato___Late_blight",
-          0.8181
-        ],
-        [
-          "Tomato___Septoria_leaf_spot",
-          0.0937
+          0.912
         ],
         [
           "Tomato___Early_blight",
-          0.0567
+          0.0712
+        ],
+        [
+          "Tomato___Bacterial_spot",
+          0.0153
         ]
-      ]
+      ],
+      "app_shows": "Tomato___Late_blight",
+      "app_status": "ok"
     },
     {
       "file": "samples/early_blight_2.jpg",
@@ -60,17 +66,19 @@
       "top3": [
         [
           "Tomato___Early_blight",
-          0.9982
-        ],
-        [
-          "Tomato___Bacterial_spot",
-          0.0012
+          0.9965
         ],
         [
           "Tomato___Late_blight",
-          0.0006
+          0.003
+        ],
+        [
+          "Tomato___Bacterial_spot",
+          0.0004
         ]
-      ]
+      ],
+      "app_shows": "Tomato___Early_blight",
+      "app_status": "ok"
     },
     {
       "file": "samples/late_blight_1.jpg",
@@ -78,17 +86,19 @@
       "top3": [
         [
           "Tomato___Late_blight",
-          0.9829
+          0.9744
         ],
         [
           "Tomato___Early_blight",
-          0.0159
+          0.0241
         ],
         [
           "Tomato___Target_Spot",
-          0.0007
+          0.0006
         ]
-      ]
+      ],
+      "app_shows": "Tomato___Late_blight",
+      "app_status": "ok"
     },
     {
       "file": "samples/late_blight_2.jpg",
@@ -99,14 +109,16 @@
           0.9999
         ],
         [
-          "Tomato___healthy",
+          "Tomato___Early_blight",
           0.0
         ],
         [
-          "Tomato___Spider_mites_Two-spotted_spider_mite",
+          "Tomato___Target_Spot",
           0.0
         ]
-      ]
+      ],
+      "app_shows": "Tomato___Late_blight",
+      "app_status": "ok"
     },
     {
       "file": "samples/leaf_mold_1.jpg",
@@ -114,17 +126,19 @@
       "top3": [
         [
           "Tomato___Leaf_Mold",
-          0.9734
-        ],
-        [
-          "Tomato___Septoria_leaf_spot",
-          0.014
+          0.9929
         ],
         [
           "Tomato___Spider_mites_Two-spotted_spider_mite",
-          0.01
+          0.0039
+        ],
+        [
+          "Tomato___Septoria_leaf_spot",
+          0.0028
         ]
-      ]
+      ],
+      "app_shows": "Tomato___Leaf_Mold",
+      "app_status": "ok"
     },
     {
       "file": "samples/leaf_mold_2.jpg",
@@ -132,17 +146,19 @@
       "top3": [
         [
           "Tomato___Leaf_Mold",
-          0.9976
+          0.9994
         ],
         [
           "Tomato___Septoria_leaf_spot",
-          0.0019
+          0.0003
         ],
         [
-          "Tomato___Spider_mites_Two-spotted_spider_mite",
-          0.0003
+          "Tomato___Late_blight",
+          0.0001
         ]
-      ]
+      ],
+      "app_shows": "Tomato___Leaf_Mold",
+      "app_status": "ok"
     },
     {
       "file": "samples/septoria_leaf_spot_1.jpg",
@@ -150,17 +166,19 @@
       "top3": [
         [
           "Tomato___Septoria_leaf_spot",
-          0.9951
-        ],
-        [
-          "Tomato___Leaf_Mold",
-          0.0021
+          0.9948
         ],
         [
           "Tomato___Bacterial_spot",
-          0.0019
+          0.0017
+        ],
+        [
+          "Tomato___Leaf_Mold",
+          0.0015
         ]
-      ]
+      ],
+      "app_shows": "Tomato___Septoria_leaf_spot",
+      "app_status": "ok"
     },
     {
       "file": "samples/septoria_leaf_spot_2.jpg",
@@ -168,17 +186,19 @@
       "top3": [
         [
           "Tomato___Septoria_leaf_spot",
-          0.9999
-        ],
-        [
-          "Tomato___Early_blight",
-          0.0001
+          0.9982
         ],
         [
           "Tomato___Bacterial_spot",
-          0.0
+          0.0012
+        ],
+        [
+          "Tomato___Early_blight",
+          0.0005
         ]
-      ]
+      ],
+      "app_shows": "Tomato___Septoria_leaf_spot",
+      "app_status": "ok"
     },
     {
       "file": "samples/spider_mites_1.jpg",
@@ -186,17 +206,19 @@
       "top3": [
         [
           "Tomato___healthy",
-          0.861
+          0.5489
         ],
         [
           "Tomato___Target_Spot",
-          0.1006
+          0.2221
         ],
         [
-          "Tomato___Septoria_leaf_spot",
-          0.0354
+          "Tomato___Spider_mites_Two-spotted_spider_mite",
+          0.212
         ]
-      ]
+      ],
+      "app_shows": "Tomato___Target_Spot",
+      "app_status": "not_healthy"
     },
     {
       "file": "samples/spider_mites_2.jpg",
@@ -204,17 +226,19 @@
       "top3": [
         [
           "Tomato___Spider_mites_Two-spotted_spider_mite",
-          0.9979
+          0.9999
         ],
         [
           "Tomato___Target_Spot",
-          0.0013
+          0.0001
         ],
         [
           "Tomato___Leaf_Mold",
-          0.0004
+          0.0
         ]
-      ]
+      ],
+      "app_shows": "Tomato___Spider_mites_Two-spotted_spider_mite",
+      "app_status": "ok"
     },
     {
       "file": "samples/target_spot_1.jpg",
@@ -222,17 +246,19 @@
       "top3": [
         [
           "Tomato___Target_Spot",
-          0.978
+          0.9829
         ],
         [
           "Tomato___healthy",
-          0.0192
+          0.0123
         ],
         [
-          "Tomato___Septoria_leaf_spot",
-          0.0018
+          "Tomato___Spider_mites_Two-spotted_spider_mite",
+          0.0021
         ]
-      ]
+      ],
+      "app_shows": "Tomato___Target_Spot",
+      "app_status": "ok"
     },
     {
       "file": "samples/target_spot_2.jpg",
@@ -240,17 +266,19 @@
       "top3": [
         [
           "Tomato___Target_Spot",
-          0.7729
+          0.8193
         ],
         [
           "Tomato___healthy",
-          0.2172
+          0.113
         ],
         [
-          "Tomato___Spider_mites_Two-spotted_spider_mite",
-          0.0039
+          "Tomato___Tomato_Yellow_Leaf_Curl_Virus",
+          0.0665
         ]
-      ]
+      ],
+      "app_shows": "Tomato___Target_Spot",
+      "app_status": "ok"
     },
     {
       "file": "samples/yellow_leaf_curl_virus_1.jpg",
@@ -265,10 +293,12 @@
           0.0
         ],
         [
-          "Tomato___Late_blight",
+          "Tomato___Spider_mites_Two-spotted_spider_mite",
           0.0
         ]
-      ]
+      ],
+      "app_shows": "Tomato___Tomato_Yellow_Leaf_Curl_Virus",
+      "app_status": "ok"
     },
     {
       "file": "samples/yellow_leaf_curl_virus_2.jpg",
@@ -279,14 +309,16 @@
           1.0
         ],
         [
-          "Tomato___Spider_mites_Two-spotted_spider_mite",
+          "Tomato___Leaf_Mold",
           0.0
         ],
         [
           "Tomato___Bacterial_spot",
           0.0
         ]
-      ]
+      ],
+      "app_shows": "Tomato___Tomato_Yellow_Leaf_Curl_Virus",
+      "app_status": "ok"
     },
     {
       "file": "samples/mosaic_virus_1.jpg",
@@ -294,35 +326,39 @@
       "top3": [
         [
           "Tomato___Tomato_mosaic_virus",
-          0.5838
+          0.7561
         ],
         [
           "Tomato___Spider_mites_Two-spotted_spider_mite",
-          0.23
+          0.234
         ],
         [
           "Tomato___healthy",
-          0.0819
+          0.0028
         ]
-      ]
+      ],
+      "app_shows": "Tomato___Tomato_mosaic_virus",
+      "app_status": "ok"
     },
     {
       "file": "samples/mosaic_virus_2.jpg",
       "true": "Tomato___Tomato_mosaic_virus",
       "top3": [
         [
-          "Tomato___Target_Spot",
-          0.4645
-        ],
-        [
           "Tomato___Tomato_mosaic_virus",
-          0.4563
+          0.8811
         ],
         [
-          "Tomato___Septoria_leaf_spot",
-          0.0499
+          "Tomato___Target_Spot",
+          0.0597
+        ],
+        [
+          "Tomato___Spider_mites_Two-spotted_spider_mite",
+          0.0487
         ]
-      ]
+      ],
+      "app_shows": "Tomato___Tomato_mosaic_virus",
+      "app_status": "ok"
     },
     {
       "file": "samples/healthy_1.jpg",
@@ -337,10 +373,12 @@
           0.0
         ],
         [
-          "Tomato___Septoria_leaf_spot",
+          "Tomato___Spider_mites_Two-spotted_spider_mite",
           0.0
         ]
-      ]
+      ],
+      "app_shows": "Tomato___healthy",
+      "app_status": "ok"
     },
     {
       "file": "samples/healthy_2.jpg",
@@ -351,14 +389,16 @@
           1.0
         ],
         [
-          "Tomato___Septoria_leaf_spot",
+          "Tomato___Target_Spot",
           0.0
         ],
         [
-          "Tomato___Target_Spot",
+          "Tomato___Septoria_leaf_spot",
           0.0
         ]
-      ]
+      ],
+      "app_shows": "Tomato___healthy",
+      "app_status": "ok"
     }
   ],
   "wrong_example": {

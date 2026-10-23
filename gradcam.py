@@ -18,12 +18,13 @@ import argparse
 import json
 from pathlib import Path
 
-IMG_SIZE = (224, 224)
 
+def forward(model, img_array):
+    """One pass through the model, keeping what CAM needs.
 
-def make_cam(model, img_array):
-    """Return (predicted_index, probabilities, 224x224 heatmap 0..1)."""
-    import numpy as np
+    Returns (features, pooled, probs): the last conv feature maps
+    (7x7x1280), their global average (1280,) and the softmax output.
+    """
     import tensorflow as tf
 
     # Locate the MobileNetV2 base (a nested Model) and the Dense head.
@@ -42,12 +43,45 @@ def make_cam(model, img_array):
     pooled = tf.reduce_mean(features, axis=(0, 1))             # GAP, (1280,)
     logits = (pooled[tf.newaxis] @ dense.kernel)[0] + dense.bias  # (num_classes,)
     probs = tf.nn.softmax(logits).numpy()
-    pred = int(np.argmax(probs))
+    return features.numpy(), pooled.numpy(), probs
 
-    weights = dense.kernel[:, pred].numpy()                    # (1280,)
-    cam = np.maximum(features.numpy() @ weights, 0)            # ReLU, (7, 7)
-    cam = cam / (cam.max() + 1e-8)
-    return pred, probs, cam
+
+def cam_for(model, features, class_index):
+    """7x7 class activation map (0..1) for one class."""
+    import numpy as np
+    import tensorflow as tf
+
+    dense = next(l for l in model.layers
+                 if isinstance(l, tf.keras.layers.Dense))
+    weights = np.asarray(dense.kernel)[:, class_index]         # (1280,)
+    cam = np.maximum(features @ weights, 0)                    # ReLU, (7, 7)
+    return cam / (cam.max() + 1e-8)
+
+
+def make_cam(model, img_array):
+    """Return (predicted_index, probabilities, 7x7 heatmap 0..1)."""
+    import numpy as np
+
+    features, _, probs = forward(model, img_array)
+    pred = int(np.argmax(probs))
+    return pred, probs, cam_for(model, features, pred)
+
+
+def overlay(img, cam, alpha=0.4):
+    """Blend a CAM onto a PIL image as a blue->red heatmap (PIL image out)."""
+    import numpy as np
+    from PIL import Image
+
+    size = img.size
+    heat = np.asarray(Image.fromarray(np.uint8(255 * cam)).resize(
+        size, Image.BILINEAR), np.float32) / 255.0
+    # Jet-style colormap: blue (cold) -> green -> red (hot)
+    rgb = np.clip(np.stack([1.5 - np.abs(4 * heat - 3),
+                            1.5 - np.abs(4 * heat - 2),
+                            1.5 - np.abs(4 * heat - 1)], axis=-1), 0, 1)
+    base = np.asarray(img.convert("RGB"), np.float32) / 255.0
+    out = (1 - alpha) * base + alpha * rgb
+    return Image.fromarray(np.uint8(255 * out))
 
 
 def main():
@@ -58,16 +92,11 @@ def main():
     parser.add_argument("--out", default=None, help="Output PNG path")
     args = parser.parse_args()
 
-    import cv2
-    import numpy as np
-    import tensorflow as tf
-
     class_names = json.loads(Path(args.classes).read_text())
-    from train import load_trained_model
+    from train import load_trained_model, prepare_image
     model = load_trained_model(args.model, len(class_names))
 
-    img = tf.keras.utils.load_img(args.image, target_size=IMG_SIZE)
-    arr = np.expand_dims(tf.keras.utils.img_to_array(img), axis=0)
+    arr, img = prepare_image(args.image)  # same resize as training
     # No preprocess_input here: the model applies it internally (train.py
     # build_mobilenet), so it expects raw 0-255 pixels like the training data.
 
@@ -75,14 +104,9 @@ def main():
     label = class_names[pred].replace("Tomato___", "Tomato - ").replace("_", " ")
     print(f"Prediction: {label} ({probs[pred] * 100:.2f}%)")
 
-    heat = cv2.resize(cam, IMG_SIZE)
-    heat = cv2.applyColorMap(np.uint8(255 * heat), cv2.COLORMAP_JET)
-    original = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-    overlay = cv2.addWeighted(original, 0.6, heat, 0.4, 0)
-
     out_path = args.out or str(Path(args.image).with_name(
         f"gradcam_{Path(args.image).stem}.png"))
-    cv2.imwrite(out_path, overlay)
+    overlay(img, cam).save(out_path)
     print(f"Saved heatmap overlay -> {out_path}")
 
 

@@ -2,6 +2,7 @@
 data/
 data_subset/
 data_split/
+data_split_leafcheck/
 *.zip
 
 # Trained models and generated outputs

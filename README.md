@@ -106,14 +106,35 @@ python app.py                                                # Gradio demo
 
 ## The demo app
 
-`app.py` is the showpiece: upload a leaf photo and get the top-3
-predictions plus an **info card** for the top disease — cause,
-symptoms to check, and prevention/next steps for all 10 classes.
+`app.py` is the showpiece. Upload a leaf photo and get:
+- the **top-3 predictions**
+- a **Grad-CAM heatmap** of where the model looked, for the class it shows
+- an **info card** for that disease — cause, symptoms to check, and
+  prevention/next steps for all 10 classes
+
+It has three tabs: *Diagnose*, *How it works* (pipeline, results,
+confusion matrix, training curves) and *Limitations*. All 20 leaves
+in `samples/` are clickable and run straight away.
 Runs locally (`python app.py` → http://127.0.0.1:7860), in Colab
 (`%run app.py` prints a public share link), or as a free public
 website on Hugging Face Spaces (below). It already includes the
-trained model, and one example leaf per class is clickable under the
-upload box.
+trained model.
+
+### Safety rules on top of the model
+
+The raw softmax output is not shown as-is. Three rules, with
+thresholds picked on the **validation** split and checked on test:
+
+| Rule | Why | Test-set effect |
+|------|-----|-----------------|
+| Show *Healthy* only at ≥ 90% confidence, else the top disease (flagged "not sure") | A sick leaf called healthy is the costliest error: nothing gets treated | Sick leaves called healthy: **56 → 7**; accuracy 91.4% → **92.8%**; healthy recall 1.00 → 0.99 |
+| Flag answers under 60% confidence as "not sure" | The model is right only ~45% of the time on those | With rule 1: 6.8% of photos flagged "not sure"; **95.2%** accuracy on the rest |
+| Reject photos that don't look like a tomato leaf | Softmax is confidently wrong on non-leaves: 27 of 33 non-leaf images scored ≥ 60% | Accepts 99.5% of test leaves; rejected **33/33** non-leaf images (faces, cat, coffee, rocket, text, noise, solid colours) |
+
+The leaf check compares the photo's MobileNetV2 features with the
+average features of each class in the training set (cosine
+similarity, `outputs/leaf_check.json`). Rebuild it after retraining:
+`python deploy/build_leaf_check.py --data-root /path/to/plantvillage`.
 
 ### Put it online — Hugging Face Spaces (free, run on your computer)
 1. Create a free account at https://huggingface.co/join
@@ -126,7 +147,8 @@ upload box.
    python deploy/deploy_to_hf.py --space YOUR_HF_USERNAME/tomato-leaf-doctor
    ```
    Paste the token when asked. The script uploads only what the app
-   needs (~20 MB: `app.py`, `train.py`, the model, sample leaves) and
+   needs (~20 MB: `app.py`, `train.py`, `gradcam.py`, the model, the
+   leaf check, three result figures, sample leaves) and
    prints the link, e.g. `https://huggingface.co/spaces/YOUR_HF_USERNAME/tomato-leaf-doctor`.
 4. The first build takes ~5 minutes (watch the *Logs* tab). After that
    the link works for anyone, on phone or laptop. Run step 3 again to
@@ -147,6 +169,7 @@ instead — same predictions.
 | `outputs/confusion_matrix_test.png` | Confusion matrix on the test set |
 | `outputs/classification_report_test.txt` | Per-class precision / recall / F1 |
 | `outputs/results_summary.json` | Val + test accuracy, model comparison |
+| `outputs/leaf_check.json` | Class-average features for the app's "is this a leaf?" check (`deploy/build_leaf_check.py`) |
 
 The committed reference run also adds presentation figures made from
 the trained model: `class_distribution.png`, `dataset_samples.png`,
@@ -183,11 +206,11 @@ confusion matrix and the cleaned `train_log.txt`.
 ├── train.py              # Training script (MobileNetV2, optional --baseline)
 ├── predict.py            # Single-image prediction (top-3 + confidence)
 ├── gradcam.py            # Grad-CAM heatmap for one image
-├── app.py                # Gradio demo with disease info cards
+├── app.py                # Gradio demo: info cards, live Grad-CAM, safety rules
 ├── requirements.txt
 ├── outputs/              # reference run: model, charts, reports, logs
 ├── samples/              # 20 test-split leaves for the demo
-├── deploy/               # Hugging Face Space: deploy script + config
+├── deploy/               # Hugging Face Space: deploy script + config, leaf-check builder
 └── docs/                 # demo script, DA stage plan, upgrades, report outline
 ```
 

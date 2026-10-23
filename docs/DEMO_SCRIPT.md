@@ -55,7 +55,8 @@ expert. Goal: one leaf photo → disease name + what to do, in a second.
   diseases that look alike, and early blight is one of the smaller classes.
 - Healthy leaves are never misclassified (240/240), but 19 spider-mite
   and 18 target-spot leaves were called healthy — early-stage
-  symptoms are subtle.
+  symptoms are subtle. That is the costliest error (the farmer does
+  nothing), which is why the app has the Healthy rule (section 8).
 
 ## 6. Transfer learning vs from scratch (45 s)
 
@@ -73,22 +74,30 @@ at epoch 10 (validation 87.2%), so with more epochs the gap would shrink.
 - Grad-CAM shows where the model looks: on late blight and Septoria
   the heat sits on the lesions, not the background.
 - Show the wrong one: a target-spot leaf with barely visible lesions,
-  called healthy at only 56% confidence — the model was unsure, and
-  the app tells the user to double-check anything below ~70%.
+  called healthy at only 56% confidence. The app no longer says
+  "Healthy" here: anything under 90% healthy is shown as "not clearly
+  healthy" with the most likely disease (section 8).
+- The app draws this heatmap live for every upload, for the class it
+  reports.
 
-## 8. Live demo (1.5 min) — the app
-Upload from `samples/` (all are test images the model never saw):
+## 8. Live demo (2 min) — the app
+Click the leaves under the upload box (all 20 are test images the
+model never saw). Each shows the top-3, a Grad-CAM heatmap and an
+info card.
 
-| Upload | Expect |
-|--------|--------|
-| `late_blight_1.jpg` | Late Blight, ~98%, info card |
-| `leaf_mold_1.jpg` | Leaf Mold, ~97% |
-| `septoria_leaf_spot_2.jpg` | Septoria leaf spot, ~100% |
-| `healthy_1.jpg` | Healthy, ~100% |
-| `spider_mites_1.jpg` | **Wrong on purpose:** says Healthy (~86%) — be upfront about it |
+| Click / upload | Expect | What to say |
+|----------------|--------|-------------|
+| `late_blight_1.jpg` | Late Blight, ~97%; heat on the brown lesion | Normal case: diagnosis, where it looked, what to do |
+| `healthy_1.jpg` | Healthy, 100% | Healthy needs ≥ 90% to be shown |
+| `spider_mites_1.jpg` | **"Not clearly healthy — check for Target Spot"** (raw: Healthy 55%) | The safety rule: a sick leaf called healthy is the worst error, so under 90% the app shows the most likely disease instead. On the test set this cut sick-called-healthy from 56 to 7 and raised accuracy 91.4% → 92.8% |
+| `early_blight_1.jpg` | Late Blight, ~91% (**wrong**) | Be upfront: early vs late blight are both brown-spot diseases; early blight is the weakest class (recall 0.62) |
+| any non-leaf photo (a face, your hand, a pen) | **"This doesn't look like a tomato leaf"** | The model alone is ≥ 60% "sure" on 27 of 33 non-leaf images; the leaf check compares its features with each class's average and rejected all 33, while accepting 99.5% of test leaves |
 
-Screenshots of the app working are in `outputs/app_demo_*.png` in
-case the live demo fails.
+Then open the **How it works** tab: pipeline, results table, the
+safety-rule table and the figures — the whole report on one page.
+
+Screenshots of each case are in `outputs/app_demo_*.png` in case the
+live demo fails.
 
 ## 9. Limitations — say these before you're asked
 - **Same-leaf overlap, and the check:** PlantVillage has ~4 photos of
@@ -109,5 +118,14 @@ case the live demo fails.
   (epochs, fine-tuning); test was touched once, at the end.
 - *Isn't the test set leaking?* Checked: a leaf-grouped split gives
   91.96%, the same as 91.33% within noise (`train.py --split leaf`).
+- *How did you pick 90% / 60% / the leaf cut-off?* On the validation
+  split only; the test split was used once, to report the effect.
+- *Isn't the Healthy rule just moving errors around?* It trades a
+  little healthy recall (1.00 → 0.99, 3 healthy leaves flagged) for
+  49 fewer sick leaves called healthy — and overall accuracy goes up.
+- *Why not just use softmax confidence to reject non-leaves?* The
+  model is ≥ 60% confident on 27 of 33 non-leaf images; softmax
+  always spreads 100% over the 10 classes it knows. Distance in
+  feature space doesn't have that problem.
 - *What would you do next?* Class weights or oversampling for small
   classes, field photos for testing, confidence calibration.

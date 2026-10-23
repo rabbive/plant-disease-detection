@@ -32,11 +32,17 @@ REPO = Path(__file__).resolve().parent.parent
 FILES = {
     "app.py": "app.py",
     "train.py": "train.py",  # load_trained_model() / build_mobilenet()
+    "gradcam.py": "gradcam.py",  # heatmap shown next to each prediction
     "README.md": "deploy/space_README.md",
     "requirements.txt": "deploy/space_requirements.txt",
     "outputs/plant_disease_subset.keras": "outputs/plant_disease_subset.keras",
     "outputs/plant_disease_subset.weights.h5": "outputs/plant_disease_subset.weights.h5",
     "outputs/class_names.json": "outputs/class_names.json",
+    "outputs/leaf_check.json": "outputs/leaf_check.json",  # non-leaf rejection
+    # figures for the "How it works" tab
+    "outputs/confusion_matrix_test.png": "outputs/confusion_matrix_test.png",
+    "outputs/training_curves.png": "outputs/training_curves.png",
+    "outputs/gradcam_grid.png": "outputs/gradcam_grid.png",
 }
 
 
