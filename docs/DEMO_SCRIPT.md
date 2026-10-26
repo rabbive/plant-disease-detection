@@ -8,18 +8,21 @@ seed 123). If you re-train, re-read `outputs/results_summary.json` and
 ## Before the professor arrives
 1. Pick where the app runs (the trained model is already in `outputs/`,
    no training needed for any of these):
-   - **Best:** your Hugging Face Space link (see README → "Put it
-     online") — works on the projector and on the professor's phone.
+   - **Best:** the live Space,
+     https://huggingface.co/spaces/ashwaanthh/tomato-leaf-doctor —
+     works on the projector and on the professor's phone. It runs in
+     the browser, so it never "sleeps" and needs no server. After any
+     change, redeploy with `python deploy/deploy_to_hf.py --space
+     ashwaanthh/tomato-leaf-doctor --static` (README section 8.3).
    - **Laptop:** `pip install -r requirements.txt`, `python app.py`,
-     open http://127.0.0.1:7860.
+     open http://127.0.0.1:7860 (the Gradio version, same answers).
    - **Colab:** open `plant_disease_results.ipynb` (README badge), run
      all; the last cell prints a public link. The same notebook walks
      through every chart below — a good backup if anything fails.
-2. Do one test click on an example leaf so the model is warm (first
-   prediction is slow; a sleeping Space takes ~1 minute to wake up).
-3. Have these open in tabs: `outputs/class_distribution.png`,
-   `outputs/training_curves.png`, `outputs/confusion_matrix_test.png`,
-   `outputs/gradcam_grid.png`, `outputs/gradcam_wrong.png`.
+2. Open the page once beforehand so the 9 MB model is downloaded and
+   cached (then even weak venue Wi-Fi is fine), and click one sample.
+3. Have the GitHub README open in another tab: it has every chart
+   below, the flowcharts (section 2) and the results tables in order.
 
 ## 1. The problem (30 s)
 Farmers lose crops to leaf diseases; spotting them early needs an
@@ -73,10 +76,16 @@ at epoch 10 (validation 87.2%), so with more epochs the gap would shrink.
 ## 7. Explainability (1 min) — `gradcam_grid.png`, `gradcam_wrong.png`
 - Grad-CAM shows where the model looks: on late blight and Septoria
   the heat sits on the lesions, not the background.
-- Show the wrong one: a target-spot leaf with barely visible lesions,
-  called healthy at only 56% confidence. The app no longer says
-  "Healthy" here: anything under 90% healthy is shown as "not clearly
-  healthy" with the most likely disease (section 8).
+- Show the wrong one (`gradcam_wrong.png`): a spider-mite leaf the
+  model calls Healthy at only 55%. The app doesn't say "Healthy" here:
+  anything under 90% healthy is shown as "not clearly healthy" with
+  the most likely disease (section 8). The third panel shows where
+  the model sees that disease.
+- Bonus story: the previous wrong example (a target-spot leaf "healthy
+  at 56%") turned out to be a preprocessing bug, not the model: the
+  app resized photos differently from training. With the training
+  resize it's Target Spot at 98%. Lesson: inference must preprocess
+  exactly like training.
 - The app draws this heatmap live for every upload, for the class it
   reports.
 
@@ -93,8 +102,9 @@ info card.
 | `early_blight_1.jpg` | Late Blight, ~91% (**wrong**) | Be upfront: early vs late blight are both brown-spot diseases; early blight is the weakest class (recall 0.62) |
 | any non-leaf photo (a face, your hand, a pen) | **"This doesn't look like a tomato leaf"** | The model alone is ≥ 60% "sure" on 27 of 33 non-leaf images; the leaf check compares its features with each class's average and rejected all 33, while accepting 99.5% of test leaves |
 
-Then open the **How it works** tab: pipeline, results table, the
-safety-rule table and the figures — the whole report on one page.
+Then expand **"How it works and the safety rules"** under the app
+(on the Space), or the **How it works** tab (Gradio app): pipeline and
+the safety-rule table on one screen.
 
 Screenshots of each case are in `outputs/app_demo_*.png` in case the
 live demo fails.

@@ -402,9 +402,11 @@
     }
   ],
   "wrong_example": {
-    "file": "6362e569-bbfc-4315-8c1e-9becbf57b426___Com.G_TgS_FL 0830.JPG",
-    "true": "Tomato___Target_Spot",
+    "file": "samples/spider_mites_1.jpg",
+    "true": "Tomato___Spider_mites_Two-spotted_spider_mite",
     "pred": "Tomato___healthy",
-    "confidence": 0.5639
+    "confidence": 0.5489,
+    "app_shows": "Tomato___Target_Spot",
+    "app_status": "not_healthy"
   }
 }
