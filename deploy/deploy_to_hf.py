@@ -51,7 +51,7 @@ FILES = {
 
 
 def stage_static(dst: Path) -> list:
-    """Static Space: deploy/static/ (page, ONNX model) + one sample per class."""
+    """Static Space: deploy/static/ (page, ONNX model, rules) + all sample leaves."""
     staged = []
     for src in sorted((REPO / "deploy/static").iterdir()):
         shutil.copy2(src, dst / src.name)
@@ -59,7 +59,7 @@ def stage_static(dst: Path) -> list:
     if "model.onnx" not in staged:
         raise SystemExit("Missing deploy/static/model.onnx - run deploy/export_onnx.py first.")
     (dst / "samples").mkdir()
-    for img in sorted((REPO / "samples").glob("*_1.jpg")):
+    for img in sorted((REPO / "samples").glob("*.jpg")):
         shutil.copy2(img, dst / "samples" / img.name)
         staged.append(f"samples/{img.name}")
     return staged
