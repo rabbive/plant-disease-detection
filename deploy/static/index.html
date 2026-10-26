@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tomato Leaf Doctor</title>
+<meta name="description" content="Upload a tomato leaf photo and get the likely disease, confidence and advice. Runs entirely in your browser.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍅</text></svg>">
+<style>
+  :root {
+    --bg: #f6f5f0; --surface: #ffffff; --ink: #1d2a1f; --muted: #5d6b5f;
+    --line: #dfe3d8; --accent: #2f7d4f; --accent-soft: #e3f1e7;
+    --bar: #2f7d4f; --bar-track: #e9ece4; --warn: #9a5b00; --warn-soft: #fbf0dc;
+    --shadow: 0 1px 2px rgb(0 0 0 / .05), 0 4px 16px rgb(0 0 0 / .04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121713; --surface: #1a211c; --ink: #e6ece6; --muted: #9aa89c;
+      --line: #2c362e; --accent: #6cc58e; --accent-soft: #1f3326;
+      --bar: #6cc58e; --bar-track: #263028; --warn: #f0b85a; --warn-soft: #332a1a;
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 48px; }
+  header h1 { margin: 0 0 4px; font-size: 1.75rem; letter-spacing: -.01em; }
+  header p { margin: 0; color: var(--muted); max-width: 62ch; }
+  .grid { display: grid; gap: 20px; margin-top: 24px; grid-template-columns: 1fr; }
+  @media (min-width: 760px) { .grid { grid-template-columns: 1fr 1fr; } }
+  .panel {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 20px; box-shadow: var(--shadow); min-width: 0;
+  }
+  .panel h2 { margin: 0 0 12px; font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  #drop {
+    display: grid; place-items: center; aspect-ratio: 1; width: 100%;
+    border: 2px dashed var(--line); border-radius: 12px; cursor: pointer;
+    background: var(--bg); overflow: hidden; position: relative; text-align: center;
+  }
+  #drop:hover, #drop.over { border-color: var(--accent); }
+  #drop:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; }
+  #drop img { width: 100%; height: 100%; object-fit: cover; }
+  #drop .hint { padding: 16px; color: var(--muted); }
+  #drop .hint strong { display: block; color: var(--ink); font-size: 1.05rem; margin-bottom: 2px; }
+  #file { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .samples-label { margin: 18px 0 8px; font-size: .9rem; color: var(--muted); }
+  .samples { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .samples button.on { border-color: var(--accent); }
+  .samples button {
+    padding: 0; border: 2px solid transparent; border-radius: 8px; overflow: hidden;
+    cursor: pointer; background: none; aspect-ratio: 1;
+  }
+  .samples button:hover, .samples button:focus-visible { border-color: var(--accent); outline: none; }
+  .samples img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #status { color: var(--muted); margin: 0 0 16px; }
+  #status:empty { display: none; }
+  .bars { list-style: none; margin: 0 0 20px; padding: 0; display: grid; gap: 12px; }
+  .bars .row { display: flex; justify-content: space-between; gap: 12px; font-size: .95rem; }
+  .bars .row span:last-child { font-variant-numeric: tabular-nums; color: var(--muted); }
+  .bars li:first-child .row { font-weight: 600; }
+  .track { height: 8px; border-radius: 4px; background: var(--bar-track); margin-top: 4px; overflow: hidden; }
+  .fill { height: 100%; background: var(--bar); border-radius: 4px; transition: width .3s ease; }
+  .bars li:not(:first-child) .fill { opacity: .45; }
+  .card h3 { margin: 0 0 12px; font-size: 1.3rem; }
+  .card dl { margin: 0; display: grid; gap: 10px; }
+  .card dt { font-weight: 600; font-size: .9rem; }
+  .card dd { margin: 0; color: var(--muted); }
+  .note { margin-top: 16px; padding: 10px 12px; border-radius: 8px; font-size: .9rem; background: var(--accent-soft); }
+  .note.low { background: var(--warn-soft); color: var(--warn); }
+  .note.reject { background: var(--warn-soft); color: var(--ink); }
+  .heat { margin: 0 0 20px; }
+  .heat figure { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .heat canvas { width: 100%; aspect-ratio: 1; border-radius: 8px; display: block; }
+  .heat figcaption { grid-column: 1 / -1; font-size: .85rem; color: var(--muted); }
+  .raw { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 8px; }
+  details.about { margin-top: 24px; }
+  details.about summary { cursor: pointer; font-weight: 600; }
+  details.about table { border-collapse: collapse; width: 100%; font-size: .9rem; margin: 8px 0 4px; }
+  details.about th, details.about td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  details.about p, details.about li { color: var(--muted); }
+  footer { margin-top: 28px; color: var(--muted); font-size: .85rem; }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>🍅 Tomato Leaf Doctor</h1>
+    <p>Upload a photo of a single tomato leaf. A MobileNetV2 model trained on 10 PlantVillage classes
+       names the likely disease, shows where it looked, and gives advice. It runs in your browser, so your photo is never uploaded.</p>
+  </header>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>Leaf photo</h2>
+      <label id="drop">
+        <input id="file" type="file" accept="image/*" aria-label="Choose a tomato leaf photo">
+        <span class="hint"><strong>Tap to choose or take a photo</strong>or drag an image here</span>
+      </label>
+      <p class="samples-label">Or try a test leaf the model never saw in training:</p>
+      <div class="samples" id="samples"></div>
+    </section>
+
+    <section class="panel" aria-live="polite">
+      <h2>Result</h2>
+      <p id="status">Loading model…</p>
+      <div id="result" hidden>
+        <div id="model-out">
+          <p class="raw">Top-3 (raw model output)</p>
+          <ul class="bars" id="bars"></ul>
+          <div class="heat">
+            <figure>
+              <canvas id="leaf" width="224" height="224" aria-label="Your leaf, as the model sees it"></canvas>
+              <canvas id="cam" width="224" height="224" aria-label="Grad-CAM heatmap"></canvas>
+              <figcaption id="cam-caption">Where the model looked (Grad-CAM): red = the area that drove the answer.</figcaption>
+            </figure>
+          </div>
+        </div>
+        <div class="card" id="card"></div>
+      </div>
+    </section>
+  </div>
+
+  <details class="about panel">
+    <summary>How it works and the safety rules</summary>
+    <p>Photo → 224×224 → MobileNetV2 (pre-trained on ImageNet, last 30 layers fine-tuned on
+       12,707 PlantVillage tomato leaves) → global average pooling → 10-class softmax.
+       The heatmap is a class activation map: the last convolutional feature maps weighted by the
+       output layer's weights for the class shown.</p>
+    <p>Three rules sit on top of the raw output. The thresholds were picked on the validation split
+       and checked once on the 2,734-image test split:</p>
+    <table>
+      <tr><th>Rule</th><th>Why</th><th>Effect on test set</th></tr>
+      <tr><td>Say "Healthy" only at ≥ 90%; otherwise show the most likely disease</td>
+          <td>A sick leaf called healthy is the costliest mistake</td>
+          <td>Sick leaves called healthy: 56 → 7. Accuracy 91.4% → 92.8%</td></tr>
+      <tr><td>Flag answers under 60% as "not sure"</td>
+          <td>The model is right only about half the time there</td>
+          <td>6.8% flagged; 95.2% accuracy on the rest</td></tr>
+      <tr><td>Reject photos that don't look like a tomato leaf</td>
+          <td>The model alone was ≥ 60% "sure" on 27 of 33 non-leaf images</td>
+          <td>Accepts 99.5% of test leaves; rejected 33/33 non-leaf images</td></tr>
+    </table>
+  </details>
+
+  <footer>
+    91.33% accuracy on 2,734 held-out test images (a CNN trained from scratch gets 85.37%).
+    Works best on one leaf against a plain background, like the training photos; field photos score lower.
+    The advice is general guidance, not a diagnosis.
+    <a href="https://github.com/rabbive/plant-disease-detection">Source code and full results</a>.
+  </footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/ort.wasm.min.js"></script>
+<script>
+const SIZE = 224;
+const KINDS = ["late_blight", "early_blight", "bacterial_spot", "leaf_mold", "septoria_leaf_spot",
+               "spider_mites", "target_spot", "yellow_leaf_curl_virus", "mosaic_virus", "healthy"];
+const SAMPLES = [1, 2].flatMap(n => KINDS.map(k => `${k}_${n}`));
+const MAX_SIDE = 2048;  // phone photos: shrink very large images first
+const $ = id => document.getElementById(id);
+let session, classes, rules;
+
+function sourcePixels(img) {
+  // The image's own pixels (RGBA), at full size up to MAX_SIDE.
+  const k = Math.min(1, MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+  const w = Math.max(1, Math.round(img.naturalWidth * k)), h = Math.max(1, Math.round(img.naturalHeight * k));
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  const ctx = c.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0, w, h);
+  return { d: ctx.getImageData(0, 0, w, h).data, w, h };
+}
+
+function pixels(img) {
+  // Resize to 224x224 exactly like training (tf.image.resize, bilinear,
+  // half-pixel centres, no antialiasing). The browser's own canvas scaling
+  // filters differently and shifts some predictions by 30+ points.
+  // Returns raw 0-255 RGB, NHWC; the model does MobileNetV2 preprocessing itself.
+  const { d, w, h } = sourcePixels(img);
+  const x = new Float32Array(SIZE * SIZE * 3), sy = h / SIZE, sx = w / SIZE;
+  for (let oy = 0, j = 0; oy < SIZE; oy++) {
+    const fy = Math.max(0, (oy + 0.5) * sy - 0.5), y0 = Math.min(h - 1, Math.floor(fy));
+    const y1 = Math.min(h - 1, y0 + 1), dy = fy - y0;
+    for (let ox = 0; ox < SIZE; ox++) {
+      const fx = Math.max(0, (ox + 0.5) * sx - 0.5), x0 = Math.min(w - 1, Math.floor(fx));
+      const x1 = Math.min(w - 1, x0 + 1), dx = fx - x0;
+      const a = (y0 * w + x0) * 4, b = (y0 * w + x1) * 4, c = (y1 * w + x0) * 4, e = (y1 * w + x1) * 4;
+      for (let ch = 0; ch < 3; ch++) {
+        const top = d[a + ch] + (d[b + ch] - d[a + ch]) * dx;
+        const bot = d[c + ch] + (d[e + ch] - d[c + ch]) * dx;
+        x[j++] = top + (bot - top) * dy;
+      }
+    }
+  }
+  return x;
+}
+
+function leafSimilarity(pooled) {
+  // Cosine similarity to the closest class-average feature vector (training split).
+  let n = 0;
+  for (const v of pooled) n += v * v;
+  n = Math.sqrt(n) + 1e-8;
+  let best = -1;
+  for (const c of rules.centroids) {
+    let dot = 0;
+    for (let i = 0; i < c.length; i++) dot += c[i] * pooled[i];
+    best = Math.max(best, dot / n);
+  }
+  return best;
+}
+
+function decide(probs, pooled) {
+  // Same rules as decide() in app.py.
+  if (leafSimilarity(pooled) < rules.min_similarity) return { status: "not_leaf" };
+  const order = probs.map((p, i) => [p, i]).sort((a, b) => b[0] - a[0]).map(t => t[1]);
+  if (order[0] === rules.healthy_index && probs[order[0]] < rules.healthy_min_prob)
+    return { status: "not_healthy", index: order[1] };
+  if (probs[order[0]] < rules.unsure_below) return { status: "unsure", index: order[0] };
+  return { status: "ok", index: order[0] };
+}
+
+function drawLeaf(x) {
+  const ctx = $("leaf").getContext("2d"), im = ctx.createImageData(SIZE, SIZE);
+  for (let i = 0, j = 0; i < im.data.length; i += 4) {
+    im.data[i] = x[j++]; im.data[i + 1] = x[j++]; im.data[i + 2] = x[j++]; im.data[i + 3] = 255;
+  }
+  ctx.putImageData(im, 0, 0);
+  return im;
+}
+
+function drawCam(leaf, cams, k, n) {
+  // cams: 7x7xN, row-major. ReLU, scale to 0..1, upsample, jet colours, blend 60/40.
+  const g = 7, cam = new Float32Array(g * g);
+  let max = 1e-8;
+  for (let i = 0; i < g * g; i++) { cam[i] = Math.max(0, cams[i * n + k]); max = Math.max(max, cam[i]); }
+  const out = $("cam").getContext("2d").createImageData(SIZE, SIZE);
+  for (let y = 0; y < SIZE; y++) {
+    const fy = Math.min(g - 1, Math.max(0, (y + 0.5) * g / SIZE - 0.5)), y0 = Math.floor(fy), y1 = Math.min(g - 1, y0 + 1), dy = fy - y0;
+    for (let x = 0; x < SIZE; x++) {
+      const fx = Math.min(g - 1, Math.max(0, (x + 0.5) * g / SIZE - 0.5)), x0 = Math.floor(fx), x1 = Math.min(g - 1, x0 + 1), dx = fx - x0;
+      const top = cam[y0 * g + x0] + (cam[y0 * g + x1] - cam[y0 * g + x0]) * dx;
+      const bot = cam[y1 * g + x0] + (cam[y1 * g + x1] - cam[y1 * g + x0]) * dx;
+      const h = (top + (bot - top) * dy) / max;
+      const jet = [1.5 - Math.abs(4 * h - 3), 1.5 - Math.abs(4 * h - 2), 1.5 - Math.abs(4 * h - 1)];
+      const i = (y * SIZE + x) * 4;
+      for (let ch = 0; ch < 3; ch++)
+        out.data[i + ch] = 0.6 * leaf.data[i + ch] + 0.4 * 255 * Math.min(1, Math.max(0, jet[ch]));
+      out.data[i + 3] = 255;
+    }
+  }
+  $("cam").getContext("2d").putImageData(out, 0, 0);
+}
+
+async function predict(src, button) {
+  document.querySelectorAll(".samples button").forEach(b => b.classList.toggle("on", b === button));
+  const img = new Image();
+  img.src = src;
+  $("drop").replaceChildren($("file"), img);
+  try { await img.decode(); } catch { $("status").textContent = "Couldn't read that image. Try a JPG or PNG."; return; }
+  if (!session) return;  // shown now, predicted once the model loads
+  $("status").textContent = "Analysing…";
+  const x = pixels(img);
+  const out = await session.run({ [session.inputNames[0]]: new ort.Tensor("float32", x, [1, SIZE, SIZE, 3]) });
+  const probs = Array.from(out.probs.data), pooled = out.pooled.data;
+  const verdict = decide(probs, pooled);
+  if (verdict.status !== "not_leaf") drawCam(drawLeaf(x), out.cams.data, verdict.index, probs.length);
+  render(probs, verdict);
+}
+
+function render(probs, verdict) {
+  const card = $("card");
+  $("status").textContent = "";
+  $("result").hidden = false;
+  $("model-out").hidden = verdict.status === "not_leaf";
+  if (verdict.status === "not_leaf") {
+    card.innerHTML = `<h3>This doesn't look like a tomato leaf</h3>
+      <p class="note reject">The model was trained on photos of one tomato leaf on a plain background, and
+      this photo looks too different from those for its answer to mean anything. Try one leaf filling most
+      of the frame, on a plain background (paper, table, hand), in even light.</p>`;
+    $("result").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    return;
+  }
+  const top = probs.map((p, i) => [p, i]).sort((a, b) => b[0] - a[0]).slice(0, 3);
+  $("bars").replaceChildren(...top.map(([p, i]) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<div class="row"><span></span><span>${(p * 100).toFixed(1)}%</span></div>
+                    <div class="track"><div class="fill" style="width:${p * 100}%"></div></div>`;
+    li.querySelector("span").textContent = classes[i].name;
+    return li;
+  }));
+  const i = verdict.index, p = probs[i], c = classes[i];
+  $("cam-caption").textContent = `Where the model looked for "${c.name}" (Grad-CAM): red = the area that drove the answer.`;
+  card.innerHTML = `<h3></h3><p class="note"></p><dl><dt>Cause</dt><dd></dd><dt>Symptoms to check</dt><dd></dd>
+                    <dt>Prevention / next step</dt><dd></dd></dl>`;
+  const note = card.querySelector(".note");
+  if (verdict.status === "not_healthy") {
+    const h = probs[rules.healthy_index];
+    card.querySelector("h3").textContent = `Not clearly healthy — check for ${c.name}`;
+    note.classList.add("low");
+    note.textContent = `The model leans Healthy (${(h * 100).toFixed(0)}%), but that is below the ` +
+      `${(rules.healthy_min_prob * 100).toFixed(0)}% bar for calling a leaf healthy. Missing a disease costs ` +
+      `more than a second look, so here is the most likely disease (${(p * 100).toFixed(0)}%). ` +
+      `Compare the leaf with the symptoms below.`;
+  } else {
+    card.querySelector("h3").textContent = `${c.name} — ${(p * 100).toFixed(1)}%`;
+    note.classList.toggle("low", verdict.status === "unsure");
+    note.textContent = verdict.status === "unsure"
+      ? "Not sure: the model isn't confident about this leaf. Treat this as a best guess, check the symptoms below by eye, or try a sharper photo of one leaf."
+      : "Model output is a guide, not a diagnosis. Confirm visually.";
+  }
+  const dd = card.querySelectorAll("dd");
+  dd[0].textContent = c.cause; dd[1].textContent = c.symptoms; dd[2].textContent = c.prevention;
+  $("result").scrollIntoView({ behavior: "smooth", block: "nearest" });  // below the fold on phones
+}
+
+$("file").addEventListener("change", e => {
+  const f = e.target.files[0];
+  if (f) predict(URL.createObjectURL(f));
+});
+const drop = $("drop");
+drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
+drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+drop.addEventListener("drop", e => {
+  e.preventDefault(); drop.classList.remove("over");
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith("image/")) predict(URL.createObjectURL(f));
+});
+
+(async () => {
+  try {
+    [classes, rules] = await Promise.all(["classes.json", "rules.json"].map(f => fetch(f).then(r => r.json())));
+    $("samples").replaceChildren(...SAMPLES.map(s => {
+      const b = document.createElement("button");
+      const label = s.replace(/_\d$/, "").replace(/_/g, " ");
+      b.type = "button"; b.title = label; b.setAttribute("aria-label", `Try sample: ${label}`);
+      b.innerHTML = `<img src="samples/${s}.jpg" alt="" loading="lazy">`;
+      b.onclick = () => predict(`samples/${s}.jpg`, b);
+      return b;
+    }));
+    ort.env.wasm.numThreads = 1;  // no cross-origin isolation on Spaces
+    session = await ort.InferenceSession.create("model.onnx", { executionProviders: ["wasm"] });
+    $("status").textContent = "Ready. Choose a photo or tap a sample leaf.";
+    const shown = drop.querySelector("img");
+    if (shown) predict(shown.src);  // picked before the model finished loading
+  } catch (err) {
+    console.error(err);
+    $("status").textContent = "The model failed to load. Refresh the page to try again.";
+  }
+})();
+</script>
+</body>
+</html>

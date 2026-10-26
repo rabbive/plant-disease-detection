@@ -187,6 +187,24 @@ def load_split(split_root: Path, name: str, shuffle=False):
     return ds
 
 
+def prepare_image(img):
+    """PIL image or path -> (1x224x224x3 float32 batch, resized PIL image).
+
+    Resizes exactly like load_split (image_dataset_from_directory:
+    bilinear, no antialiasing). PIL's resize filters, and load_img's
+    default nearest-neighbour, shift predictions by up to ~35 points
+    on some leaves, so every inference path goes through here.
+    """
+    import numpy as np
+    import tensorflow as tf
+    from PIL import Image
+    if not isinstance(img, Image.Image):
+        img = Image.open(img)
+    arr = np.asarray(img.convert("RGB"), np.float32)[None]  # PNGs may be RGBA
+    arr = tf.image.resize(arr, IMG_SIZE, method="bilinear").numpy()
+    return arr, Image.fromarray(np.uint8(np.clip(arr[0], 0, 255)))
+
+
 def cache_compact(ds):
     """Cache images in RAM as uint8 instead of float32 (4x smaller).
 

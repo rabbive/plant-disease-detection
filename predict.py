@@ -13,8 +13,6 @@ import argparse
 import json
 from pathlib import Path
 
-IMG_SIZE = (224, 224)
-
 
 def main():
     parser = argparse.ArgumentParser()
@@ -24,15 +22,12 @@ def main():
     args = parser.parse_args()
 
     import numpy as np
-    import tensorflow as tf
 
     class_names = json.loads(Path(args.classes).read_text())
-    from train import load_trained_model
+    from train import load_trained_model, prepare_image
     model = load_trained_model(args.model, len(class_names))
 
-    img = tf.keras.utils.load_img(args.image, target_size=IMG_SIZE)
-    arr = tf.keras.utils.img_to_array(img)
-    arr = np.expand_dims(arr, axis=0)
+    arr, _ = prepare_image(args.image)  # same resize as training
     # No preprocess_input here: the model applies it internally (train.py
     # build_mobilenet), so it expects raw 0-255 pixels like the training data.
 
